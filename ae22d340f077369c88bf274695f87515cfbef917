@@ -1,0 +1,9 @@
+Change-Id: Iae22d340f077369c88bf274695f87515cfbef917
+Code-Review+2: Paul McMahan <pmcmahan@us.ibm.com>
+IP-Clean+1: Paul McMahan <pmcmahan@us.ibm.com>
+Verified+1: Paul McMahan <pmcmahan@us.ibm.com>
+Submitted-by: Paul McMahan <pmcmahan@us.ibm.com>
+Submitted-at: Thu, 01 Nov 2012 17:03:36 -0400
+Reviewed-on: https://git.eclipse.org/r/8476
+Project: lyo/org.eclipse.lyo.client
+Branch: refs/heads/master
