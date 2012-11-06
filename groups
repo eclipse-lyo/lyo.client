@@ -1,4 +1,4 @@
 # UUID                                  	Group Name
 #
-bbpe8rjjv7av0izip8lgeswvq0nin6s7v7l5s6sw	technology.lyo
 e667efa4d7e88410dd42728155ab14051e894019	Administrators
+ldap:cn=technology.lyo,ou=group,dc=eclipse,dc=org	ldap/technology.lyo
