@@ -298,17 +298,17 @@ public class OslcClient {
 		if (defaultQueryCapability != null) {
 			//return default, if present
 			return defaultQueryCapability.getQueryBase().toString();
-		} else if (firstQueryCapability != null) {
+		} else if (firstQueryCapability != null && firstQueryCapability.getResourceTypes().length ==0) {
 			//return the first for the domain, if present
 			return firstQueryCapability.getQueryBase().toString();
 		} 
 		
-		throw new ResourceNotFoundException(serviceProviderUrl, "CreationFactory");
+		throw new ResourceNotFoundException(serviceProviderUrl, "QueryCapability");
 	}
 	
 	/**
 	 * Find the OSLC Creation Factory URL for a given OSLC resource type.  If no resource type is given, returns
-	 * the default Creation Factory, if it exists.
+	 * the default Creation Factory, if it exists.  
 	 *
 	 * @param serviceProviderUrl
 	 * @param oslcDomain
@@ -359,7 +359,7 @@ public class OslcClient {
 		if (defaultCreationFactory != null) {
 			//return default, if present
 			return defaultCreationFactory.getCreation().toString();
-		} else if (firstCreationFactory != null) {
+		} else if (firstCreationFactory != null && firstCreationFactory.getResourceTypes().length ==0) {
 			//return the first for the domain, if present
 			return firstCreationFactory.getCreation().toString();
 		} 
