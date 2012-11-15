@@ -36,6 +36,7 @@ import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.log4j.Logger;
 import org.apache.wink.client.ApacheHttpClientConfig;
 import org.apache.wink.client.ClientConfig;
 import org.apache.wink.client.ClientResponse;
@@ -69,6 +70,7 @@ public class OslcClient {
 	protected HttpClient httpClient;
 	private HttpClientPool clientPool;
 	private ClientConfig clientConfig;
+	private static Logger LOGGER = Logger.getLogger(OslcClient.class);
 	
 	/**
 	 * Initialize a new OslcClient
@@ -237,11 +239,18 @@ public class OslcClient {
 			Statement thisSP = listStatements.nextStatement();
 			com.hp.hpl.jena.rdf.model.Resource spRes = thisSP.getResource();
 			Property titleProp = rdfModel.createProperty(OSLCConstants.DC,"title");
-			String spTitle = spRes.getProperty(titleProp).getLiteral().getString();
-			
-			if (spTitle.equals(serviceProviderTitle))
-			{
+			String spTitle="";
+			if (spRes.hasProperty(titleProp)) {
+				spTitle = spRes.getProperty(titleProp).getLiteral().getString();
+			} else {
+				LOGGER.info("Service provider at " + spRes.getURI()
+						+ "misses title property");
+				continue;
+			}
+
+			if (spTitle.equals(serviceProviderTitle)) {
 				retval = spRes.getURI();
+				break;
 			}
 		}
 		if (retval == null ) {
