@@ -12,6 +12,8 @@
  *  Contributors:
  *  
  *     Michael Fiedler     - initial API and implementation
+ *     Gabriel Ruelas      - Include more samples
+ *     Carlos A Arreola    - Include more samples
  *******************************************************************************/
 package org.eclipse.lyo.client.oslc.samples;
 
@@ -20,13 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import net.oauth.OAuthException;
 import javax.xml.namespace.QName;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -35,7 +33,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.apache.wink.client.ClientResponse;
-import org.eclipse.lyo.client.exception.ResourceNotFoundException;
 import org.eclipse.lyo.client.exception.RootServicesException;
 import org.eclipse.lyo.client.oslc.OSLCConstants;
 import org.eclipse.lyo.client.oslc.OslcClient;
@@ -48,21 +45,11 @@ import org.eclipse.lyo.client.oslc.resources.Requirement;
 import org.eclipse.lyo.client.oslc.resources.RequirementCollection;
 import org.eclipse.lyo.client.oslc.resources.RmConstants;
 import org.eclipse.lyo.client.oslc.resources.RmUtil;
-import org.eclipse.lyo.oslc4j.core.model.CreationFactory;
 import org.eclipse.lyo.oslc4j.core.model.Link;
-import org.eclipse.lyo.oslc4j.core.model.OslcConstants;
 import org.eclipse.lyo.oslc4j.core.model.OslcMediaType;
-import org.eclipse.lyo.oslc4j.core.model.Property;
 import org.eclipse.lyo.oslc4j.core.model.ResourceShape;
-import org.eclipse.lyo.oslc4j.core.model.Service;
-import org.eclipse.lyo.oslc4j.core.model.ServiceProvider;
-import org.eclipse.lyo.oslc4j.core.model.ValueType;
 
-import com.hp.hpl.jena.datatypes.BaseDatatype;
-import com.hp.hpl.jena.datatypes.RDFDatatype;
-import com.hp.hpl.jena.rdf.model.Literal;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
-import com.hp.hpl.jena.rdf.model.impl.LiteralImpl;
+
 
 /**
  * Samples of logging in to Rational Requirements Composer and running OSLC operations
@@ -169,8 +156,9 @@ public class RRCFormSample {
 					requirement.setTitle("Req01");
 					
 					// Decorate the PrimaryText
-					primaryText = RmConstants.XHTML_DIV_START_TAG + "My Primary Text" + RmConstants.XHTML_DIV_END_TAG;
-					requirement.getExtendedProperties().put(RmConstants.PROPERTY_PRIMARY_TEXT, primaryText);
+					primaryText = "My Primary Text";
+					org.w3c.dom.Element obj = RmUtil.convertStringToHTML(primaryText);
+					requirement.getExtendedProperties().put(RmConstants.PROPERTY_PRIMARY_TEXT, obj);
 					
 					requirement.setDescription("Created By EclipseLyo");
 					requirement.addImplementedBy(new Link(new URI("http://google.com"), "Link in REQ01"));
@@ -267,13 +255,11 @@ public class RRCFormSample {
 					// Check with the workaround
 					 changedPrimaryText =  (String ) requirement.getExtendedProperties().get(PROPERTY_PRIMARY_TEXT_WORKAROUND);
 				}
-				if ( changedPrimaryText != null && primaryText!= null ) {
-					if ( ! changedPrimaryText.equalsIgnoreCase(primaryText)){
-						// Log an error
-						logger.log(Level.SEVERE, "Retrieved primaryText is not equals to original primaryText ");
-					}
-				}
 				
+				if ( ( changedPrimaryText != null) && (! changedPrimaryText.contains(primaryText)) ) {
+					logger.log(Level.SEVERE, "Error getting primary Text");
+				}
+
 				//QUERIES
 				// SCENARIO 01  Do a query for type= Requirements
 				OslcQueryParameters queryParams = new OslcQueryParameters();
