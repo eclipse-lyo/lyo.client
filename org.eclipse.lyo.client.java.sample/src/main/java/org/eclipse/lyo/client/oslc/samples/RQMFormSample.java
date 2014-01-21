@@ -120,8 +120,10 @@ public class RQMFormSample {
 				queryParams.setWhere("oslc_qm:status=\"com.ibm.rqm.execution.common.state.passed\"");
 				OslcQuery query = new OslcQuery(client, queryCapability, 10, queryParams);
 				
+				System.out.println("Running query: " + query.getQueryUrl());
 				OslcQueryResult result = query.submit();
-				
+				result.setMemberProperty(OSLCConstants.OSLC_QM_V2 + "testResult");
+	
 				boolean processAsJavaObjects = true;
 				processPagedQueryResults(result,client, processAsJavaObjects);
 				
@@ -136,6 +138,7 @@ public class RQMFormSample {
 				OslcQuery query2 = new OslcQuery(client, queryCapability, queryParams2);
 				
 				OslcQueryResult result2 = query2.submit();
+				result2.setMemberProperty(OSLCConstants.OSLC_QM_V2 + "testResult");
 				ClientResponse rawResponse = result2.getRawResponse();
 				processRawResponse(rawResponse);
 				rawResponse.consumeContent();
@@ -163,7 +166,7 @@ public class RQMFormSample {
 
 				creationResponse.consumeContent();
 				String testcaseLocation = creationResponse.getHeaders().getFirst(HttpHeaders.LOCATION);
-				System.out.println("Test Case created a location " + testcaseLocation);
+				System.out.println("Test Case created at location " + testcaseLocation);
 				
 				//Get the test case from the service provider and update its title property 
 				testcase = client.getResource(testcaseLocation,
