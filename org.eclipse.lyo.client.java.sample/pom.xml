@@ -11,9 +11,10 @@
 			<url>http://oauth.googlecode.com/svn/code/maven</url>
 		</repository>
 	</repositories>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 	<dependencies>
-
-
 		<dependency>
 			<groupId>org.apache.wink</groupId>
 			<artifactId>wink-client</artifactId>
