@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,6 +47,7 @@ import org.eclipse.lyo.client.oslc.resources.Requirement;
 import org.eclipse.lyo.client.oslc.resources.RequirementCollection;
 import org.eclipse.lyo.client.oslc.resources.RmConstants;
 import org.eclipse.lyo.client.oslc.resources.RmUtil;
+import org.eclipse.lyo.oslc4j.core.OSLC4JUtils;
 import org.eclipse.lyo.oslc4j.core.model.Link;
 import org.eclipse.lyo.oslc4j.core.model.OslcMediaType;
 import org.eclipse.lyo.oslc4j.core.model.Property;
@@ -141,6 +144,14 @@ public class RRCFormSample {
 				ResourceShape collectionInstanceShape = RmUtil.lookupRequirementsInstanceShapes(
 						serviceProviderUrl, OSLCConstants.OSLC_RM_V2,
 						OSLCConstants.RM_REQUIREMENT_COLLECTION_TYPE, client, "Personal Collection");
+				
+				// We need to use Resource shapes to properly handle DATE's attributes
+				// following 4 lines will enable the logic to properly handle Date attibutes
+				List<ResourceShape> shapes = new ArrayList<ResourceShape>();
+				shapes.add(featureInstanceShape);
+				shapes.add(collectionInstanceShape);
+				OSLC4JUtils.setShapes(shapes);
+				OSLC4JUtils.setInferTypeFromShape("true"); // Used to handle the Date fields properly
 				
 				Requirement requirement = null;
 				RequirementCollection collection = null;
