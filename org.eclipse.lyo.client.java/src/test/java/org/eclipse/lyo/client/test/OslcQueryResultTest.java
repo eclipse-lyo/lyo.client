@@ -23,12 +23,14 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 
 import org.apache.wink.client.ClientResponse;
+import org.apache.wink.client.Resource;
 import org.eclipse.lyo.client.oslc.OslcClient;
 import org.eclipse.lyo.client.oslc.resources.OslcQuery;
 import org.eclipse.lyo.client.oslc.resources.OslcQueryParameters;
 import org.eclipse.lyo.client.oslc.resources.OslcQueryResult;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 /**
@@ -83,20 +85,6 @@ public class OslcQueryResultTest {
 		 assertEquals(5, result.getMembersUrls().length);
 	}
 
-	@Test
-	public void testBlogQueryNext() {
-		 ClientResponse mockedResponse = mockClientResponse("/blogQuery.rdf");
-
-		 OslcQueryParameters params = new OslcQueryParameters();
-		 params.setSelect("dcterms:title");
-		 OslcQuery query = new OslcQuery(new OslcClient(), "http://example.com/query");
-		 OslcQueryResult result = new OslcQueryResult(query, mockedResponse);
-		 result.setMemberProperty("http://open-services.net/ns/bogus/blogs#comment");
-		 
-		 OslcQueryResult nextResult = result.next();
-		 assertEquals("http://open-services.net/ns/bogus/blogs#comment", nextResult.getMemberProperty());
-	}
-	
 	@Test
 	public void testAnyMember() {
 		System.setProperty(OslcQueryResult.SELECT_ANY_MEMBER, "true");
