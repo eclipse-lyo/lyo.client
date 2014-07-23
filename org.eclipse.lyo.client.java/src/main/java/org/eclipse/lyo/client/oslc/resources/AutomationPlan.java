@@ -205,11 +205,12 @@ extends AbstractResource
     {
         return title;
     }
-    
+   
     @OslcDescription("The parameter definitions for the automation plan.")
     @OslcOccurs(Occurs.ZeroOrMany)
     @OslcName("parameterDefinition")
     @OslcPropertyDefinition(AutomationConstants.AUTOMATION_NAMESPACE + "parameterDefinition")
+    @OslcValueType(ValueType.LocalResource)
     @OslcTitle("Parameter Definitions")
     public Property[] getParameterDefinitions()
     {
