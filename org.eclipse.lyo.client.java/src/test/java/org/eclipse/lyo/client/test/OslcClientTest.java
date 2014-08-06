@@ -33,7 +33,7 @@ public class OslcClientTest {
 	 * Tests that the RDF/XML MessageBodyWriter doesn't go into an infinite loop when
 	 * given bad data on the client (Bug 417749). ClientRuntimeException expected.
 	 */
-	@Test(expected = ClientRuntimeException.class)
+	@Test(expected = ClientRuntimeException.class, timeout = 5000)
 	public void postInvalidOlscResource() throws IOException, OAuthException, URISyntaxException {
 		final OslcClient client = new OslcClient();
 		final AutomationRequest request = new AutomationRequest();
