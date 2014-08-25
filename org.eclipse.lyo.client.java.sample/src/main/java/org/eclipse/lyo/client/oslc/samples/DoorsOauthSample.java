@@ -19,13 +19,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -72,6 +73,7 @@ import org.eclipse.lyo.oslc4j.core.model.OslcMediaType;
 import org.eclipse.lyo.oslc4j.core.model.ResourceShape;
 import org.eclipse.lyo.oslc4j.core.model.Service;
 import org.eclipse.lyo.oslc4j.core.model.ServiceProvider;
+import org.eclipse.lyo.oslc4j.provider.jena.AbstractOslcRdfXmlProvider;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -171,6 +173,18 @@ public class DoorsOauthSample {
 						serviceProviderUrl, OSLCConstants.OSLC_RM_V2,
 						requirement.getRdfTypes()[0].toString(), client, "Resource shape for a requirement in the " + projectArea);
 				
+				//SCENARIO A: Run a query for all Requirements modified since 08/02/2010 with OSLC paging of 10 items per
+				//page turned on and list the members of the result
+				OslcQueryParameters queryParamsN = new OslcQueryParameters("dcterms:modified>=\"2010-08-01T21:51:40.979Z\"xsd:dateTime",null,null, null,"dcterms=<http://purl.org/dc/terms/>");
+
+				OslcQuery queryN = new OslcQuery(client, queryCapability, 10, queryParamsN);
+				
+				OslcQueryResult resultN = queryN.submit();
+				
+				processPagedQueryResults(resultN,client, false);
+				
+				System.out.println("\n------------------------------\n");
+				
 				if (( reqInstanceShape != null ) && (requirementFactory != null ) ){
 					//STEP 9: Create a Requirement
 					requirement.setInstanceShape(reqInstanceShape.getAbout());
@@ -204,7 +218,7 @@ public class DoorsOauthSample {
 				processPagedQueryResults(result,client, processAsJavaObjects);
 				System.out.println("\n------------------------------\n");
 				System.out.println("Number of Results for query 1 = " + resultsSize + "\n");
-
+				
 				//STEP 11: Now get the artifact with identifier = 1 
 				queryParams = new OslcQueryParameters();
 				queryParams.setPrefix("dcterms=<http://purl.org/dc/terms/>");
@@ -224,41 +238,23 @@ public class DoorsOauthSample {
 				if ( requirementURL != null ) {
 					// Get the requirement
 					ClientResponse getResponse = client.getResource(requirementURL,OslcMediaType.APPLICATION_RDF_XML);
-					// normal way but impossible in DOORS now - bug 438163
-						//requirement = getResponse.getEntity(Requirement.class);
-						// Change the Primary text
-						//String primaryText = "My Eclipse Lyo CHANGED Primary Text";
-						// Put in the proper object ( Element for XML Strings )
-						//Element obj = RmUtil.convertStringToHTML(primaryText);
-						//requirement.getExtendedProperties().put(RmConstants.PROPERTY_PRIMARY_TEXT, obj);
+					
+					// to handle datatype format exception (some system datetime attributes in doors, empty value in some attributes,...) 
+					// Those attributes will not be parse and not be add in the requirement class
+					System.setProperty(AbstractOslcRdfXmlProvider.OSLC4J_STRICT_DATATYPES, "false");
+					
+					requirement = getResponse.getEntity(Requirement.class);
+					
+					// Change the Primary text
+					String primaryText = "My Eclipse Lyo CHANGED Primary Text";
+					// Put in the proper object ( Element for XML Strings )
+					Element obj = RmUtil.convertStringToHTML(primaryText);
+					requirement.getExtendedProperties().put(RmConstants.PROPERTY_PRIMARY_TEXT, obj);
 						
-						// Add a couple of links 
-						//requirement.addImplementedBy(new Link(new URI("http://google.com"), "ImplementedBy example"));
-						//requirement.addElaboratedBy(new Link(new URI("http://terra.com.mx"), "ElaboratedBy example"));					
+					// Add a couple of links 
+					requirement.addImplementedBy(new Link(new URI("http://google.com"), "ImplementedBy example"));
+					requirement.addElaboratedBy(new Link(new URI("http://terra.com.mx"), "ElaboratedBy example"));					
 					
-					//use Jena directly to update requirement
-					InputStream is = getResponse.getEntity(InputStream.class);
-					Model m = ModelFactory.createDefaultModel();
-					m.read(is, requirementURL, "RDF/XML");
-					Resource requirementR = m.getResource(requirementURL);
-					StringWriter w = new StringWriter();
-					// Change the Primary text			
-					Property primaryText = m.createProperty("http://jazz.net/ns/rm#primaryText");
-					requirementR.removeAll(primaryText);
-					requirementR.addProperty(primaryText, "My Eclipse Lyo CHANGED Primary text");
-					
-					//add a couple of external links
-					//first link : -> www.google.com
-					Resource googleLink = m.createResource("http://www.google.com");
-					Property refProp = m.createProperty("http://purl.org/dc/terms/references");
-					Statement link = m.createStatement(requirementR, refProp, googleLink); 
-					m.add(link);
-					//second link : -> www.ibm.com
-					Resource ibmLink = m.createResource("http://www.ibm.com");
-					//Property refProp2 = m.createProperty("http://open-services.net/ns/rm#validatedBy");
-					Statement link2 = m.createStatement(requirementR, refProp, ibmLink); 
-					m.add(link2);
-					m.write(w, "RDF/XML");
 					// Get the eTAG, we need it to update
 					String etag = getResponse.getHeaders().getFirst(OSLCConstants.ETAG);
 					getResponse.consumeContent();
@@ -287,14 +283,13 @@ public class DoorsOauthSample {
 						}
 					}
 					*/
-					
-					
+										
 					
 					// Update the requirement with the proper etag 
-					//ClientResponse updateResponse = client.updateResource(requirementURL, 
-					//		requirement, OslcMediaType.APPLICATION_RDF_XML, OslcMediaType.APPLICATION_RDF_XML, etag);
 					ClientResponse updateResponse = client.updateResource(requirementURL, 
-							w.toString(), OslcMediaType.APPLICATION_RDF_XML, OslcMediaType.APPLICATION_RDF_XML, etag);
+							requirement, OslcMediaType.APPLICATION_RDF_XML, OslcMediaType.APPLICATION_RDF_XML, etag);
+					//ClientResponse updateResponse = client.updateResource(requirementURL, 
+					//		w.toString(), OslcMediaType.APPLICATION_RDF_XML, OslcMediaType.APPLICATION_RDF_XML, etag);
 					
 					updateResponse.consumeContent();
 				}
@@ -551,7 +546,7 @@ public class DoorsOauthSample {
 		if (retval == null ) {
 			throw new ResourceNotFoundException(catalogUrl, serviceProviderTitle);
 		}
-		
+		System.out.println(retval);
 		return retval;
 	}
 	
