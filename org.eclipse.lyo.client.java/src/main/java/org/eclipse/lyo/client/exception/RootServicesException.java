@@ -16,6 +16,7 @@
 package org.eclipse.lyo.client.exception;
 
 
+@SuppressWarnings("serial")
 public final class RootServicesException extends OslcClientApplicationException {
 
 private static final String MESSAGE_KEY = "RootServicesException";

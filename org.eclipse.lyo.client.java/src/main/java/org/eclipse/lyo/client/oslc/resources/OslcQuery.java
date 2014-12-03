@@ -16,8 +16,6 @@
 package org.eclipse.lyo.client.oslc.resources;
 
 
-import java.util.logging.Logger;
-
 import org.apache.wink.client.ClientResponse;
 import org.apache.wink.client.Resource;
 import org.eclipse.lyo.client.oslc.OSLCConstants;

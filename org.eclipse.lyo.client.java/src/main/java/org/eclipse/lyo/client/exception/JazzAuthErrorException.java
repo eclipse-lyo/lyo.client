@@ -20,6 +20,7 @@ package org.eclipse.lyo.client.exception;
  * Exception indicating a Jazz authentication or credentials problem
  *
  */
+@SuppressWarnings("serial")
 public class JazzAuthErrorException extends OslcClientApplicationException {
 
 	private static final String MESSAGE_KEY = "JazzAuthErrorException";
