@@ -1,0 +1,335 @@
+<script src="https://code.jquery.com/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css"></link>
+
+
+<script src="../oslcClient.js" type="text/javascript"></script>
+<!-- <script src="../rdf-ext.js"></script>
+<script src="../rdfextWrapper.js"></script>
+ -->
+
+ //or
+
+  <!-- <script src="../rdflib.js"></script>
+<script src="../rdflibjsWrapper.js"></script>
+-->
+
+
+
+
+<script type="text/javascript">
+  rdfLib.addPrefix("oslc_cm", "http://open-services.net/ns/cm#");
+
+  var taskRDFData = "<rdf:RDF  xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#' \n";
+  taskRDFData = taskRDFData + " xmlns:oslc='http://open-services.net/ns/core#' \n  xmlns:oslc_cmx='http://open-services.net/ns/cm-x#' \n";
+  taskRDFData = taskRDFData + "  xmlns:dcterms='http://purl.org/dc/terms/'  xmlns:oslc_cm='http://open-services.net/ns/cm#'  > \n";
+  taskRDFData = taskRDFData + "  <rdf:Description>\n<dcterms:description rdf:parseType='Literal'>${description}</dcterms:description> \n ";
+  taskRDFData = taskRDFData + " <dcterms:title rdf:parseType='Literal'>${title}</dcterms:title>\n</rdf:Description>\n</rdf:RDF>\n";
+
+
+
+  var oslcClient = new OslcClient("2.0");
+  var oslcQuery = null;
+
+  function commonErrorHandle(spanToUpdate) {
+
+    return function(jqXHR, textStatus, errorThrown) {
+      spanToUpdate.empty();
+      spanToUpdate.text(textStatus + ":" + errorThrown);
+    };
+  }
+
+
+  function createChangeRequest() {
+
+    oslcClient.lookupServiceProviderUrl($("#cmServiceProvidersUrl").val(), $("#cmServiceProviderTitle").val(), function(serviceProviderUrl) {
+
+      oslcClient.lookupCreationFactoryURI(serviceProviderUrl, "http://open-services.net/ns/cm#", null, null, function(creationFactoryURI) {
+
+        oslcClient.createResource(creationFactoryURI, $("#changeRequestTextArea").val(), "application/rdf+xml", "application/rdf+xml", function(chgReqGraph, chgReqRawData, jqXHR) {
+          var title = rdfLib.match(null, rdfLib.resolveQName("rdf:type"), rdfLib.resolveQName("oslc_cm:ChangeRequest"), chgReqGraph).map(function(changeReqStm) {
+            return rdfLib.match(changeReqStm.subject, rdfLib.resolveQName("dcterms:title"), null, chgReqGraph).map(function(nextPageStm) {
+              return nextPageStm.object.toString();
+            });
+
+          }).join("");
+          var anchor = $("<a target='_blank'>" + title + "</a>").attr("href", jqXHR.getResponseHeader(
+            'Location'));
+          $("#creationStatus").empty();
+          $("#creationStatus").append(anchor);
+
+
+        }, commonErrorHandle($("#creationStatus")));
+
+      }, commonErrorHandle($("#creationStatus")));
+    }, commonErrorHandle($("#creationStatus")));
+
+  }
+
+
+  function getChangeRequest() {
+
+    oslcClient.getResource($("#changeRequestUrl").val(), "application/rdf+xml", false, function(chgReqGraph, chgReqRawData, jqXHR) {
+      $("#etag").val(jqXHR.getResponseHeader("ETag"));
+
+      rdfLib.serialize(chgReqGraph, jqXHR._url, "application/rdf+xml").then(function(result) {
+        $("#updateChangeRequestTextArea").val(result);
+      }, function(err) {
+        //workaround due to lack of an RDF/XML serializer for rdf-ext
+        if (window.rdf) {
+          var xmlString = (new XMLSerializer()).serializeToString(chgReqRawData);
+          $("#updateChangeRequestTextArea").val(xmlString);
+        } else {
+          commonErrorHandle($("#updateStatus"))(null, null, err);
+        }
+      });
+
+
+    }, commonErrorHandle($("#updateStatus")));
+
+  }
+
+  function populateChangeRequestTextArea() {
+
+    var rdfData = taskRDFData.replace("${title}", $("#title").val());
+    rdfData = rdfData.replace("${description}", $("#description").val());
+    $("#changeRequestTextArea").val(rdfData);
+
+  }
+
+  function updateChangeRequest() {
+
+
+    oslcClient.updateResource($("#changeRequestUrl").val(), $("#updateChangeRequestTextArea").val(), "application/rdf+xml", "application/rdf+xml", $("#etag").val(), function(response) {
+
+      $("#updateStatus").text("Change Request Updated!");
+    }, commonErrorHandle($("#updateStatus")));
+
+  }
+
+  function openCreationDialog() {
+
+    oslcClient.lookupServiceProviderUrl($("#creationDialogCmServiceProvidersUrl").val(), $("#creationDialogCmServiceProviderTitle").val(), function(serviceProviderUrl) {
+      var rdfData = null;
+      var titleValue = $.trim($("#draftTitle").val());
+      if (titleValue.length > 0) {
+        rdfData = taskRDFData.replace("${title}", titleValue);
+      }
+
+      var descriptionValue = $.trim($("#draftDescription").val());
+      if (descriptionValue.length > 0) {
+        if (rdfData === null) {
+          rdfData = taskRDFData.replace("${description}", descriptionValue);
+          rdfData = rdfData.replace("${title}", "");
+        } else {
+          rdfData = rdfData.replace("${description}", descriptionValue);
+
+        }
+      }
+
+      oslcClient.openCreationDialog(serviceProviderUrl, "http://open-services.net/ns/cm#", null, rdfData, "application/rdf+xml", function(creationResultJson) {
+
+        var anchor = $("<a target='_blank'>" + creationResultJson[0]["oslc:label"] + "</a>").attr("href", creationResultJson[0]["rdf:resource"]);
+        $("#creationDialogStatus").empty();
+
+        $("#creationDialogStatus").append(anchor);
+
+      }, commonErrorHandle($("#creationDialogStatus")));
+
+    }, commonErrorHandle($("#creationDialogStatus")));
+
+
+  }
+
+  function openSelectionDialog() {
+
+    oslcClient.lookupServiceProviderUrl($("#selectionDialogCmServiceProvidersUrl").val(), $("#selectionDialogCmServiceProviderTitle").val(), function(serviceProviderUrl) {
+
+
+      oslcClient.openSelectionDialog(serviceProviderUrl, "http://open-services.net/ns/cm#", null, function(selectionResultJson) {
+
+        jQuery.each(selectionResultJson, function() {
+          var anchor = $("<a target='_blank'>" + this["oslc:label"] + "</a>").attr("href", this["rdf:resource"]);
+          $("#selectionDialogStatus").empty();
+          $("#selectionDialogStatus").append(anchor);
+        });
+
+
+      }, commonErrorHandle($("#selectionDialogStatus")));
+
+    }, commonErrorHandle($("#selectionDialogStatus")));
+
+
+  }
+
+  function executeQuery() {
+    function internalExecuteQuery() {
+      oslcQuery.nextPage(function(queryResource, rawData, jqXHR) {
+
+        rdfLib.serialize(queryResource, jqXHR._url, "application/rdf+xml").then(function(result) {
+          $("#queryResultTextArea").val(result);
+        }, function(err) {
+          //workaround due to lack of an RDF/XML serializer for rdf-ext
+          if (window.rdf) {
+            var xmlString = (new XMLSerializer()).serializeToString(rawData);
+            $("#queryResultTextArea").val(xmlString);
+          } else {
+            commonErrorHandle($("#queryStatus"))(null, null, err);
+          }
+
+        });
+
+      }, commonErrorHandle($("#queryStatus")));
+    }
+    if (oslcQuery == null) {
+
+      oslcClient.lookupServiceProviderUrl($("#queryCmServiceProvidersUrl").val(), $("#queryCmServiceProviderTitle").val(), function(serviceProviderUrl) {
+
+        oslcClient.lookupQueryCapabilityURI(serviceProviderUrl, "http://open-services.net/ns/cm#", null, function(queryCapability, graph) {
+          var queryBase = rdfLib.match(queryCapability, rdfLib.resolveQName("oslc:queryBase"), null, graph).map(function(queryBaseStm) {
+            return rdfLib.getUriValue(queryBaseStm.object);
+          }).join("");
+
+          oslcQuery = new OslcQuery(oslcClient, queryBase, "application/rdf+xml", $("#pageSize").val(), $("#selectClause").val(), $("#whereClause").val(), $("#orderByClause").val(), $("#searchTermsClause").val(), $("#prefix").val());
+          internalExecuteQuery();
+        }, commonErrorHandle($("#queryStatus")));
+      }, commonErrorHandle($("#queryStatus")));
+    } else {
+      internalExecuteQuery();
+    }
+
+  }
+
+  function resetQueryResult() {
+    oslcQuery = null;
+    $("#queryResultTextArea").val(" ");
+  }
+</script>
+<h1>OSLC Javascript Example</h1>
+<p/>
+<h2>Change Management Domain</h2>
+<p/>
+
+<h3>Create New Change Request</h3>
+<p/>
+<span>CM Service Providers URL:</span>
+<input type="text" name="cmServiceProvidersUrl" id="cmServiceProvidersUrl" value="http://localhost:8080/OSLC4JBugzilla/services/catalog/singleton" />
+<p/>
+<span>CM Service Provider Title:</span>
+<input type="text" id="cmServiceProviderTitle" name="cmServiceProviderTitle" value="testing-funky-hyphens" />
+<p/>
+<span>Title:</span>
+<input type="text" name="title" id="title" />
+<p/>
+<span>Description:</span>
+<input type="text" name="description" id="description" />
+<p/>
+<button name="populateChangeRequestTextArea" id="populateChangeRequestTextArea" onclick="populateChangeRequestTextArea();">Populate Change Request Text Area</button>
+<p/> If you are using Bugzilla Lyo Adapter, you need to add the bugzilla rdf namespace <b> (xmlns:bugz='http://www.bugzilla.org/rdf#') </b> and the tree tags below:
+<ul>
+  <li><b>&lt;bugz:component/&gt;</b> Example: <b>&lt;bugz:component&gt;Hyphenitization&lt;/bugz:component&gt;</b> </li>
+  <li><b>&lt;bugz:version/&gt;</b> Example: <b>&lt;bugz:version&gt;unspecified&lt;/bugz:version&gt;</b> </li>
+  <li><b>&lt;rdf:type/&gt;</b> Example: <b>&lt;rdf:type rdf:resource='http://open-services.net/ns/cm#ChangeRequest'/&gt;</b> </li>
+</ul>
+<p/> If you are using Rational Team Concert, you need to add the following tag:
+<ul>
+  <li><b>&lt;dcterms:type/&gt;</b> Example: <b>&lt;dcterms:type&gt;defect&lt;/dcterms:type&gt;</b> </li>
+
+</ul>
+<p/>
+<textarea name="changeRequestTextArea" id="changeRequestTextArea" rows="4" cols="50" style="margin: 0px; width: 1115px; height: 270px;">
+</textarea>
+<p/>
+<span>Status:</span>
+<span id="creationStatus" />
+<p/>
+<button name="Create" id="create" onclick="createChangeRequest();">Create</button>
+
+<h3>Update Change Request</h3>
+<p/>
+<span>Change Request URL:</span>
+<input type="text" name="changeRequestUrl" id="changeRequestUrl" style="width: 800px;" value="https://localhost:9443/jazz/resource/itemName/com.ibm.team.workitem.WorkItem/182?oslc.properties=dcterms:title,dcterms:description&oslc.prefix=oslc=<http://open-services.net/ns/core%23>,dcterms=<http://purl.org/dc/terms/>,rtc_cm=<http://jazz.net/xmlns/prod/jazz/rtc/cm/1.0/>"
+/>
+<button name="getChangeRequest" id="getChangeRequest" onclick="getChangeRequest();">Get Change Request</button>
+<p/>
+<textarea name="updateChangeRequestTextArea" id="updateChangeRequestTextArea" rows="4" cols="50" style="margin: 0px; width: 1115px; height: 270px;">
+</textarea>
+<p/>
+<span>ETag:</span>
+<input type="text" name="etag" id="etag"></input>
+<p/>
+<span>Status:</span>
+<span id="updateStatus" />
+<p/>
+<button name="Update" id="update" onclick="updateChangeRequest();">Update</button>
+
+<h3>Change Request Creation Delegation UI</h3>
+<p/>
+<span>CM Service Providers URL:</span>
+<input type="text" name="creationDialogCmServiceProvidersUrl" id="creationDialogCmServiceProvidersUrl" value="https://localhost:9443/jazz/oslc/workitems/catalog" />
+<p/>
+<span>CM Service Provider Title:</span>
+<input type="text" id="creationDialogCmServiceProviderTitle" name="creationDialogCmServiceProviderTitle" />
+<p/>
+<span>Draf Title:</span>
+<input type="text" name="draftTitle" id="draftTitle" />
+<p/>
+<span>Draf Description:</span>
+<input type="text" name="draftDescription" id="draftDescription" />
+<p/>
+<span>Status:</span>
+<span id="creationDialogStatus" />
+<p/>
+<button name="Open Creation Dialog" id="openCreationDialog" onclick="openCreationDialog();">Open Creation Dialog</button>
+
+
+<h3>Change Request Selection Delegation UI</h3>
+<p/>
+<span>CM Service Providers URL:</span>
+<input type="text" name="selectionDialogCmServiceProvidersUrl" id="selectionDialogCmServiceProvidersUrl" value="http://localhost:8080/OSLC4JBugzilla/services/catalog/singleton" />
+<p/>
+<span>CM Service Provider Title:</span>
+<input type="text" id="selectionDialogCmServiceProviderTitle" name="selectionDialogCmServiceProviderTitle" value="testing-funky-hyphens" />
+<p/>
+<span>Status:</span>
+<span id="selectionDialogStatus" />
+<p/>
+<button name="Selection Creation Dialog" id="selectionCreationDialog" onclick="openSelectionDialog();">Open Selection Dialog</button>
+
+
+<h3>Change Request Query</h3>
+<p/>
+<span>CM Service Providers URL:</span>
+<input type="text" name="queryCmServiceProvidersUrl" id="queryCmServiceProvidersUrl" value="https://localhost:9443/jazz/oslc/workitems/catalog" />
+<p/>
+<span>CM Service Provider Title:</span>
+<input type="text" id="queryCmServiceProviderTitle" name="queryCmServiceProviderTitle" />
+<p/>
+<span>Select Clause:</span>
+<input type="text" name="selectClause" id="selectClause" value="dcterms:title,dcterms:description" />
+<p/>
+<p/>
+<span>Where Clause:</span>
+<input type="text" name="whereClause" id="whereClause" />
+<p/>
+<span>Order By Clause:</span>
+<input type="text" name="orderByClause" id="orderByClause" />
+<p/>
+<span>Search Terms Clause:</span>
+<input type="text" name="searchTermsClause" id="searchTermsClause" />
+<p/>
+<span>Prefix:</span>
+<input type="text" name="prefix" id="prefix" value="dcterms=<http://purl.org/dc/terms/>,rtc_cm=<http://jazz.net/xmlns/prod/jazz/rtc/cm/1.0/>,rdf=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>" />
+<p/>
+<span>Page Size:</span>
+<input type="text" name="pageSize" id="pageSize" value="2" />
+<p/>
+<span>Status:</span>
+<span id="queryStatus" />
+<p/>
+<button name="Execute Query" id="executeQuery" onclick="executeQuery();">Next Page</button>
+<button name="Execute Query" id="executeQuery" onclick="resetQueryResult();">Reset Query Result</button>
+<p/>
+<textarea name="queryResultTextArea" id="queryResultTextArea" rows="4" cols="50" style="margin: 0px; width: 1115px; height: 270px;">
+</textarea>
+<p/>
