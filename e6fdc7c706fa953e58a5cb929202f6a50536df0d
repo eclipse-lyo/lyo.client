@@ -1,0 +1,7 @@
+Verified+1: Hudson CI
+Code-Review+2: Andrii Berezovskyi <andriib@kth.se>
+Submitted-by: Andrii Berezovskyi <andriib@kth.se>
+Submitted-at: Thu, 09 Mar 2017 13:30:58 -0500
+Reviewed-on: https://git.eclipse.org/r/92398
+Project: lyo/org.eclipse.lyo.client
+Branch: refs/heads/2.1.2-service
