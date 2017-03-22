@@ -21,11 +21,13 @@ public interface ArchitectureConstants
 	public static String ARCHITECTURE_DOMAIN        = "http://open-services.net/ns/am#";
 	public static String ARCHITECTURE_NAMESPACE     = "http://open-services.net/ns/am#";
 	public static String ARCHITECTURE_PREFIX        = "oslc_am";
+	public static final String ARCHITECTURE_RESOURCE  = "Resource";
+	public static final String ARCHITECTURE_LINK_TYPE = "LinkType";
     public static String FOAF_NAMESPACE                              = "http://xmlns.com/foaf/0.1/";
     public static String FOAF_NAMESPACE_PREFIX                       = "foaf";
 
-    public static String TYPE_ARCHITECTURE_RESOURCE  = ARCHITECTURE_NAMESPACE + "Resource";
-    public static String TYPE_ARCHITECTURE_LINK_TYPE = ARCHITECTURE_NAMESPACE + "LinkType";
+    public static String TYPE_ARCHITECTURE_RESOURCE  = ARCHITECTURE_NAMESPACE + ARCHITECTURE_RESOURCE;
+    public static String TYPE_ARCHITECTURE_LINK_TYPE = ARCHITECTURE_NAMESPACE + ARCHITECTURE_LINK_TYPE;
     public static String TYPE_PERSON                = FOAF_NAMESPACE + "Person";
 
 }
