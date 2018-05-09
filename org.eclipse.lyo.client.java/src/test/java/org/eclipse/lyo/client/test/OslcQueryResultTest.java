@@ -37,7 +37,7 @@ import org.mockito.Mockito;
  */
 public class OslcQueryResultTest {
 	@Before
-	public void clearPublicURISystemProperty() throws MalformedURLException {
+	public void clearPublicURISystemProperty() {
 		System.clearProperty(OslcQueryResult.SELECT_ANY_MEMBER);
 	}
 
