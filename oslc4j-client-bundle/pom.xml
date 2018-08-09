@@ -1,0 +1,103 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.eclipse.lyo.clients</groupId>
+  <artifactId>oslc4j-client-bundle</artifactId>
+  <version>2.4.0-SNAPSHOT</version>
+  <packaging>bundle</packaging>
+
+
+<name>${bundle.symbolicName}</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+    <bundle.symbolicName>oslc4j-client-bundle</bundle.symbolicName>
+    <bundle.namespace>org.oslc4j.client.bundle</bundle.namespace>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi_R4_core</artifactId>
+      <version>1.0</version>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi_R4_compendium</artifactId>
+      <version>1.0</version>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+  
+    <build>
+    <plugins>
+      <plugin>
+        <!-- | the following instructions build a simple set of public/private
+          classes into an OSGi bundle -->
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>3.5.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <manifestLocation>META-INF</manifestLocation>
+          <instructions>
+            <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
+            <Bundle-Version>${project.version}</Bundle-Version>
+		            <_exportcontents>
+		    org.eclipse.lyo.client.exception,
+			org.eclipse.lyo.client.oslc,
+			org.eclipse.lyo.client.oslc.jazz,
+			org.eclipse.lyo.client.oslcresources,
+            </_exportcontents>
+            <Import-Package>
+              javax.servlet;version="2.5.0",
+              javax.servlet.http;version="2.5.0",
+              javax.ws.rs;version="1.1.1",
+              javax.ws.rs.core;version="1.1.1",
+              javax.ws.rs.ext;version="1.1.1"
+            </Import-Package>
+            <Bundle-RequiredExecutionEnvironment>JavaSE-1.8</Bundle-RequiredExecutionEnvironment>
+            <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
+            <Embed-Directory>dependencies</Embed-Directory>
+            <Embed-StripGroup>true</Embed-StripGroup>
+            <Embed-Transitive>true</Embed-Transitive>
+          </instructions>
+        </configuration>
+        <executions>
+          <execution>
+            <id>oslc4j-client-bundle</id>
+            <phase>package</phase>
+            <goals>
+              <goal>bundle</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <version>2.8</version>
+        <configuration>
+          <pde>true</pde>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+   <distributionManagement>
+        <repository>
+            <id>repo.eclipse.org</id>
+            <name>Eclipse Lyo Releases</name>
+            <url>https://repo.eclipse.org/content/repositories/lyo-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>repo.eclipse.org</id>
+            <name>Eclipse Lyo Snapshots</name>
+            <url>https://repo.eclipse.org/content/repositories/lyo-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+</project>
