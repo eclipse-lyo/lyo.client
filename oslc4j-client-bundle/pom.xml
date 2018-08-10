@@ -13,7 +13,7 @@
 
   <properties>
     <bundle.symbolicName>oslc4j-client-bundle</bundle.symbolicName>
-    <bundle.namespace>org.oslc4j.client.bundle</bundle.namespace>
+    <bundle.namespace>org.eclipse.lyo.client.java.bundle</bundle.namespace>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
