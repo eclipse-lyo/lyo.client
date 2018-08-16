@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1533892422331
+Bnd-LastModified: 1534409539681
 Build-Jdk: 1.8.0_144
 Built-By: Yash Khatri
 Bundle-ManifestVersion: 2
@@ -13,11 +13,12 @@ Embed-Directory: dependencies
 Embed-StripGroup: true
 Embed-Transitive: true
 Export-Package: org.eclipse.lyo.client.exception;version="2.4.0.SNAPSHOT
- ",org.eclipse.lyo.client.oslc;version="2.4.0.SNAPSHOT",org.eclipse.lyo.
- client.oslc.jazz;version="2.4.0.SNAPSHOT",org.eclipse.lyo.client.oslcre
- sources;version="2.4.0.SNAPSHOT"
+ ",org.eclipse.lyo.client.oslc;uses:="org.eclipse.lyo.client.exception";
+ version="2.4.0.SNAPSHOT",org.eclipse.lyo.client.oslc.jazz;uses:="org.ec
+ lipse.lyo.client.exception,org.eclipse.lyo.client.oslc";version="2.4.0.
+ SNAPSHOT",org.eclipse.lyo.client.oslcresources;version="2.4.0.SNAPSHOT"
 Import-Package: javax.servlet;version="2.5.0",javax.servlet.http;version
  ="2.5.0",javax.ws.rs;version="1.1.1",javax.ws.rs.core;version="1.1.1",j
  avax.ws.rs.ext;version="1.1.1"
-Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.6))"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
 Tool: Bnd-3.5.0.201709291849
