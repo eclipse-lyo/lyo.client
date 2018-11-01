@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
@@ -34,9 +37,8 @@ import net.oauth.client.OAuthClient;
 import net.oauth.client.httpclient4.HttpClient4;
 
 import org.apache.http.HttpHeaders;
-import org.apache.wink.client.ClientConfig;
-import org.apache.wink.client.ClientResponse;
-import org.apache.wink.client.RestClient;
+import org.glassfish.jersey.client.ClientConfig;
+import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,7 +108,7 @@ public class OslcOAuthClient extends OslcClient {
 	}
 
 	@Override
-	protected ClientResponse getResource(String url, Map<String, String> requestHeaders, String defaultMediaType)
+	protected Response getResource(String url, Map<String, String> requestHeaders, String defaultMediaType)
 			throws IOException, OAuthException, URISyntaxException {
 		if (requestHeaders == null) {
 			requestHeaders = new HashMap<>();
@@ -118,14 +120,20 @@ public class OslcOAuthClient extends OslcClient {
 	}
 
 	@Override
-	public ClientResponse updateResource(final String url, final Object artifact, String mediaType, String acceptType, String ifMatch) throws IOException, OAuthException, URISyntaxException
+	public Response updateResource(final String url, final Object artifact, String mediaType, String acceptType, String ifMatch) throws IOException, OAuthException, URISyntaxException
 	{
 		String authHeader = this.getAuthorizationHeader(url, HttpMethod.PUT);
 
 		ClientConfig config = getClientConfig();
 
-		RestClient restClient = new RestClient(config);
-		return restClient.resource(url).contentType(mediaType).accept(acceptType).header("Authorization",authHeader).header(HttpHeaders.IF_MATCH, ifMatch).header(OSLCConstants.OSLC_CORE_VERSION,"2.0").header(HttpHeaders.IF_MATCH, ifMatch).put(artifact);
+		Client client = ClientBuilder.newClient(config);
+		return client.target(url).request()
+				.accept(acceptType)
+				.header("Authorization",authHeader)
+				.header(HttpHeaders.IF_MATCH, ifMatch)
+				.header(OSLCConstants.OSLC_CORE_VERSION,"2.0")
+				.header(HttpHeaders.IF_MATCH, ifMatch)
+				.put(Entity.entity(artifact, mediaType));
 	}
 
 	/**
@@ -140,13 +148,16 @@ public class OslcOAuthClient extends OslcClient {
 	 * @throws IOException
 	 */
 	@Override
-	public ClientResponse createResource(final String url, final Object artifact, String mediaType, String acceptType) throws IOException, OAuthException, URISyntaxException  {
+	public Response createResource(final String url, final Object artifact, String mediaType, String acceptType) throws IOException, OAuthException, URISyntaxException  {
 		String authHeader = this.getAuthorizationHeader(url, HttpMethod.POST);
 
 		ClientConfig config = getClientConfig();
-		RestClient restClient = new RestClient(config);
 
-		return restClient.resource(url).contentType(mediaType).accept(acceptType).header("Authorization",authHeader).header(OSLCConstants.OSLC_CORE_VERSION,"2.0").post(artifact);
+		Client client = ClientBuilder.newClient(config);
+		return client.target(url).request()
+				.accept(acceptType)
+				.header("Authorization",authHeader).header(OSLCConstants.OSLC_CORE_VERSION,"2.0")
+				.post(Entity.entity(artifact, mediaType));
 
 		// return restClient.resource(url).accept(mediaType).header("Authorization",authHeader).header("OSLC-Core-Version", "2.0").get();
 	}

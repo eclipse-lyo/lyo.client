@@ -23,7 +23,7 @@ import javax.xml.namespace.QName;
 
 import net.oauth.OAuthException;
 
-import org.apache.wink.client.ClientRuntimeException;
+import javax.ws.rs.ClientErrorException;
 import org.eclipse.lyo.client.oslc.OSLCConstants;
 import org.eclipse.lyo.client.oslc.OslcClient;
 import org.eclipse.lyo.client.oslc.resources.AutomationRequest;
@@ -37,7 +37,7 @@ public class OslcClientTest {
 	 */
 	@Ignore("Unit test actually POSTs data to example.com, which we shouldn't do as we " +
 			"don't own that domain. It also fails in our Hudson build environment.")
-	@Test(expected = ClientRuntimeException.class, timeout = 5000)
+	@Test(expected = ClientErrorException.class, timeout = 5000)
 	public void postInvalidOlscResource() throws IOException, OAuthException, URISyntaxException {
 		final OslcClient client = new OslcClient();
 		final AutomationRequest request = new AutomationRequest();

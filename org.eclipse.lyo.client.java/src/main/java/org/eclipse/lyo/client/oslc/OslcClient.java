@@ -34,7 +34,17 @@ import java.util.Set;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response.Status.Family;
 
 import net.oauth.OAuthException;
 import net.oauth.client.httpclient4.HttpClientPool;
@@ -53,11 +63,6 @@ import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.protocol.HttpContext;
-import org.apache.wink.client.ClientConfig;
-import org.apache.wink.client.ClientResponse;
-import org.apache.wink.client.Resource;
-import org.apache.wink.client.RestClient;
-import org.apache.wink.client.httpclient.ApacheHttpClientConfig;
 import org.eclipse.lyo.client.exception.ResourceNotFoundException;
 import org.eclipse.lyo.client.oslc.resources.OslcQuery;
 import org.eclipse.lyo.oslc4j.core.model.CreationFactory;
@@ -67,6 +72,8 @@ import org.eclipse.lyo.oslc4j.core.model.ServiceProvider;
 import org.eclipse.lyo.oslc4j.core.model.ServiceProviderCatalog;
 import org.eclipse.lyo.oslc4j.provider.jena.JenaProvidersRegistry;
 import org.eclipse.lyo.oslc4j.provider.json4j.Json4JProvidersRegistry;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
 
 
 /**
@@ -133,18 +140,26 @@ public class OslcClient {
 		this.hostnameVerifier = hostnameVerifier;
 		setupSSLSupport();
 		clientPool = new OAuthHttpPool();
-		clientConfig = new ApacheHttpClientConfig(httpClient);
-		javax.ws.rs.core.Application app = new javax.ws.rs.core.Application() {
-			@Override
-			public Set<Class<?>> getClasses() {
-				Set<Class<?>> classes = new HashSet<Class<?>>();
-				classes.addAll(JenaProvidersRegistry.getProviders());
-				classes.addAll(Json4JProvidersRegistry.getProviders());
-				return classes;
-			}
-		};
-		clientConfig = clientConfig.applications(app);
+//		clientConfig = new ApacheHttpClientConfig(httpClient);
+//		javax.ws.rs.core.Application app = new javax.ws.rs.core.Application() {
+//			@Override
+//			public Set<Class<?>> getClasses() {
+//				Set<Class<?>> classes = new HashSet<Class<?>>();
+//				classes.addAll(JenaProvidersRegistry.getProviders());
+//				classes.addAll(Json4JProvidersRegistry.getProviders());
+//				return classes;
+//			}
+//		};
+//		clientConfig = clientConfig.applications(app);
 
+		//FIXME: We need to use the above Apache httpClient when setting this clientConfig.
+		clientConfig = new ClientConfig().connectorProvider(new ApacheConnectorProvider());
+		for (Class<?> provider : JenaProvidersRegistry.getProviders()) {
+			clientConfig.register(provider);
+		}
+		
+//		ClientBuilder clientBuilder = ClientBuilder.newBuilder();
+//		Configuration clientConfig = clientBuilder.getConfiguration();
 	}
 
 	/**
@@ -178,7 +193,7 @@ public class OslcClient {
 	 * @throws OAuthException
 	 * @throws URISyntaxException
 	 */
-	public ClientResponse getResource(String url) throws IOException,
+	public Response getResource(String url) throws IOException,
 			OAuthException, URISyntaxException {
 		return getResource(url, null, OSLCConstants.CT_RDF);
 	}
@@ -199,7 +214,7 @@ public class OslcClient {
 	 * @throws OAuthException
 	 * @throws URISyntaxException
 	 */
-	public ClientResponse getResource(String url, final String mediaType)
+	public Response getResource(String url, final String mediaType)
 			throws IOException, OAuthException, URISyntaxException {
 		return getResource(url, null, mediaType);
 	}
@@ -222,18 +237,19 @@ public class OslcClient {
 	 * @throws OAuthException
 	 * @throws URISyntaxException
 	 */
-	public ClientResponse getResource(String url, Map<String, String> requestHeaders)
+	public Response getResource(String url, Map<String, String> requestHeaders)
 			throws IOException, OAuthException, URISyntaxException {
 		return getResource(url, requestHeaders, OSLCConstants.CT_RDF);
 	}
 
-	protected ClientResponse getResource(String url, Map<String, String> requestHeaders, String defaultMediaType)
+	protected Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType)
 			throws IOException, OAuthException, URISyntaxException {
-		ClientResponse response = null;
-		RestClient restClient = new RestClient(clientConfig);
+		Response response = null;
+		Client client = ClientBuilder.newClient(clientConfig); 
 		boolean redirect = false;
 		do {
-			Resource resource = restClient.resource(url);
+			WebTarget webTarget = client.target(url);
+			Builder innvocationBuilder = webTarget.request(); 
 			boolean acceptSet = false;
 			boolean versionSet = false;
 
@@ -242,7 +258,7 @@ public class OslcClient {
 				for (Map.Entry<String, String> entry : requestHeaders
 						.entrySet()) {
 					// Add the header.
-					resource.header(entry.getKey(), entry.getValue());
+					innvocationBuilder.header(entry.getKey(), entry.getValue());
 
 					// Remember if we've already set Accept or
 					// OSLC-Core-Version.
@@ -260,18 +276,20 @@ public class OslcClient {
 			// Make sure both the Accept and OSLC-Core-Version headers have been
 			// set.
 			if (!acceptSet) {
-				resource.accept(defaultMediaType);
+				innvocationBuilder.accept(defaultMediaType);
 			}
 
 			if (!versionSet) {
-				resource.header(OSLCConstants.OSLC_CORE_VERSION, "2.0");
+				innvocationBuilder.header(OSLCConstants.OSLC_CORE_VERSION, "2.0");
 			}
 
-			response = resource.get();
+			response = innvocationBuilder.get();
+			
+			ResponseBuilder fromResponse = Response.fromResponse(response);
 
-			if (response.getStatusType().getFamily() == Status.Family.REDIRECTION) {
-				url = response.getHeaders().getFirst(HttpHeaders.LOCATION);
-				response.consumeContent();
+			if (Response.Status.fromStatusCode(response.getStatus()).getFamily() == Status.Family.REDIRECTION) {
+				url = response.getStringHeaders().getFirst(HttpHeaders.LOCATION);
+				response.readEntity(String.class);
 				redirect = true;
 			} else {
 				redirect = false;
@@ -281,7 +299,7 @@ public class OslcClient {
 		return response;
 	}
 
-
+	
 	/**
 	 * Delete an OSLC resource and return a Wink ClientResponse
 	 * @param url
@@ -290,19 +308,20 @@ public class OslcClient {
 	 * @throws OAuthException
 	 * @throws URISyntaxException
 	 */
-	public ClientResponse deleteResource(String url)
+	public Response deleteResource(String url)
 			throws IOException, OAuthException, URISyntaxException {
-
-		ClientResponse response = null;
-		RestClient restClient = new RestClient(clientConfig);
+		Response response = null;
+		Client client = ClientBuilder.newClient(clientConfig);
 		boolean redirect = false;
-
+		
 		do {
-			response = restClient.resource(url).header(OSLCConstants.OSLC_CORE_VERSION,"2.0").delete();
+			response = client.target(url).request()
+					.header(OSLCConstants.OSLC_CORE_VERSION,"2.0")
+					.delete();
 
-			if (response.getStatusType().getFamily() == Status.Family.REDIRECTION) {
-				url = response.getHeaders().getFirst(HttpHeaders.LOCATION);
-				response.consumeContent();
+			if (Response.Status.fromStatusCode(response.getStatus()).getFamily() == Status.Family.REDIRECTION) {
+				url = response.getStringHeaders().getFirst(HttpHeaders.LOCATION);
+				response.readEntity(String.class);
 				redirect = true;
 			} else {
 				redirect = false;
@@ -324,7 +343,7 @@ public class OslcClient {
 	 * @throws OAuthException
 	 * @throws IOException
 	 */
-	public ClientResponse createResource(String url, final Object artifact, String mediaType) throws IOException, OAuthException, URISyntaxException {
+	public Response createResource(String url, final Object artifact, String mediaType) throws IOException, OAuthException, URISyntaxException {
 		return createResource(url, artifact, mediaType, "*/*");
 	}
 
@@ -339,18 +358,21 @@ public class OslcClient {
 	 * @throws OAuthException
 	 * @throws IOException
 	 */
-	public ClientResponse createResource(String url, final Object artifact, String mediaType, String acceptType) throws IOException, OAuthException, URISyntaxException {
+	public Response createResource(String url, final Object artifact, String mediaType, String acceptType) throws IOException, OAuthException, URISyntaxException {
 
-		ClientResponse response = null;
-		RestClient restClient = new RestClient(clientConfig);
+		Response response = null;
+		Client client = ClientBuilder.newClient(clientConfig);
 		boolean redirect = false;
 
 		do {
-			response = restClient.resource(url).contentType(mediaType).accept(acceptType).header(OSLCConstants.OSLC_CORE_VERSION,"2.0").post(artifact);
+			response = client.target(url).request()
+					.accept(acceptType)
+					.header(OSLCConstants.OSLC_CORE_VERSION,"2.0")
+					.post(Entity.entity(artifact, mediaType));
 
-			if (response.getStatusType().getFamily() == Status.Family.REDIRECTION) {
-				url = response.getHeaders().getFirst(HttpHeaders.LOCATION);
-				response.consumeContent();
+			if (Response.Status.fromStatusCode(response.getStatus()).getFamily() == Status.Family.REDIRECTION) {
+				url = response.getStringHeaders().getFirst(HttpHeaders.LOCATION);
+				response.readEntity(String.class);
 				redirect = true;
 			} else {
 				redirect = false;
@@ -367,7 +389,7 @@ public class OslcClient {
 	 * @param mediaType
 	 * @return
 	 */
-	public ClientResponse updateResource(String url, final Object artifact, String mediaType) {
+	public Response updateResource(String url, final Object artifact, String mediaType) {
 
 		return updateResource(url, artifact, mediaType, "*/*");
 	}
@@ -380,18 +402,21 @@ public class OslcClient {
 	 * @param acceptType
 	 * @return
 	 */
-	public ClientResponse updateResource(String url, final Object artifact, String mediaType, String acceptType) {
+	public Response updateResource(String url, final Object artifact, String mediaType, String acceptType) {
 
-		ClientResponse response = null;
-		RestClient restClient = new RestClient(clientConfig);
+		Response response = null;
+		Client client = ClientBuilder.newClient(clientConfig);
 		boolean redirect = false;
 
 		do {
-			response = restClient.resource(url).contentType(mediaType).accept(acceptType).header(OSLCConstants.OSLC_CORE_VERSION,"2.0").put(artifact);
+			response = client.target(url).request()
+					.accept(acceptType)
+					.header(OSLCConstants.OSLC_CORE_VERSION,"2.0")
+					.put(Entity.entity(artifact, mediaType));
 
-			if (response.getStatusType().getFamily() == Status.Family.REDIRECTION) {
-				url = response.getHeaders().getFirst(HttpHeaders.LOCATION);
-				response.consumeContent();
+			if (Response.Status.fromStatusCode(response.getStatus()).getFamily() == Status.Family.REDIRECTION) {
+				url = response.getStringHeaders().getFirst(HttpHeaders.LOCATION);
+				response.readEntity(String.class);
 				redirect = true;
 			} else {
 				redirect = false;
@@ -412,19 +437,21 @@ public class OslcClient {
 	 * @throws OAuthException
 	 * @throws IOException
 	 */
-	public ClientResponse updateResource(String url, final Object artifact, String mediaType, String acceptType, String ifMatch) throws IOException, OAuthException, URISyntaxException {
+	public Response updateResource(String url, final Object artifact, String mediaType, String acceptType, String ifMatch) throws IOException, OAuthException, URISyntaxException {
 
-		ClientResponse response = null;
-		RestClient restClient = new RestClient(clientConfig);
+		Response response = null;
+		Client client = ClientBuilder.newClient(clientConfig);
 		boolean redirect = false;
 
 		do {
-			response = restClient.resource(url).contentType(mediaType).accept(acceptType)
-					.header(OSLCConstants.OSLC_CORE_VERSION,"2.0").header(HttpHeaders.IF_MATCH, ifMatch).put(artifact);
+			response = client.target(url).request()
+					.accept(acceptType)
+					.header(OSLCConstants.OSLC_CORE_VERSION,"2.0").header(HttpHeaders.IF_MATCH, ifMatch)
+					.put(Entity.entity(artifact, mediaType));
 
-			if (response.getStatusType().getFamily() == Status.Family.REDIRECTION) {
-				url = response.getHeaders().getFirst(HttpHeaders.LOCATION);
-				response.consumeContent();
+			if (Response.Status.fromStatusCode(response.getStatus()).getFamily() == Status.Family.REDIRECTION) {
+				url = response.getStringHeaders().getFirst(HttpHeaders.LOCATION);
+				response.readEntity(String.class);
 				redirect = true;
 			} else {
 				redirect = false;
@@ -439,10 +466,10 @@ public class OslcClient {
 	 * @param query
 	 * @return
 	 */
-	public org.apache.wink.client.Resource getQueryResource(final OslcQuery query) {
-		RestClient restClient = new RestClient(clientConfig);
-		org.apache.wink.client.Resource resource = restClient.resource(query.getCapabilityUrl());
-		return resource;
+	public WebTarget getWebResource(final String capabilityUri) {
+		Client client = ClientBuilder.newClient(clientConfig);
+		WebTarget webTarget = client.target(capabilityUri);
+		return webTarget;
 	}
 
 	protected class OAuthHttpPool implements HttpClientPool {
@@ -468,8 +495,8 @@ public class OslcClient {
 			throws IOException, OAuthException, URISyntaxException, ResourceNotFoundException
 	{
 		String retval = null;
-		ClientResponse response = getResource(catalogUrl,OSLCConstants.CT_RDF);
-		ServiceProviderCatalog catalog = response.getEntity(ServiceProviderCatalog.class);
+		Response response = getResource(catalogUrl,OSLCConstants.CT_RDF);
+		ServiceProviderCatalog catalog = response.readEntity(ServiceProviderCatalog.class);
 
 		if (catalog != null) {
 			for (ServiceProvider sp:catalog.getServiceProviders()) {
@@ -507,8 +534,8 @@ public class OslcClient {
 		QueryCapability defaultQueryCapability = null;
 		QueryCapability firstQueryCapability = null;
 
-		ClientResponse response = getResource(serviceProviderUrl,OSLCConstants.CT_RDF);
-		ServiceProvider serviceProvider = response.getEntity(ServiceProvider.class);
+		Response response = getResource(serviceProviderUrl,OSLCConstants.CT_RDF);
+		ServiceProvider serviceProvider = response.readEntity(ServiceProvider.class);
 
 
 		if (serviceProvider != null) {
@@ -562,8 +589,8 @@ public class OslcClient {
 		CreationFactory defaultCreationFactory = null;
 		CreationFactory firstCreationFactory = null;
 
-		ClientResponse response = getResource(serviceProviderUrl,OSLCConstants.CT_RDF);
-		ServiceProvider serviceProvider = response.getEntity(ServiceProvider.class);
+		Response response = getResource(serviceProviderUrl,OSLCConstants.CT_RDF);
+		ServiceProvider serviceProvider = response.readEntity(ServiceProvider.class);
 
 		if (serviceProvider != null) {
 			for (Service service:serviceProvider.getServices()) {

@@ -16,8 +16,8 @@
 package org.eclipse.lyo.client.oslc.resources;
 
 
-import org.apache.wink.client.ClientResponse;
-import org.apache.wink.client.Resource;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
 import org.eclipse.lyo.client.oslc.OSLCConstants;
 import org.eclipse.lyo.client.oslc.OslcClient;
 import org.eclipse.lyo.client.oslc.OslcOAuthClient;
@@ -38,7 +38,7 @@ public class OslcQuery {
 
 	private final int pageSize;
 
-	private final Resource queryResource;
+	private WebTarget queryResource;
 
 	//query parameters
 	private final String where;
@@ -107,7 +107,7 @@ public class OslcQuery {
 		} else {
 			this.where = this.select = this.orderBy = this.searchTerms = this.prefix = null;
 		}
-		this.queryResource = createQueryResource();
+		this.queryResource = createQueryResource(this.getCapabilityUrl());
 		this.queryUrl = this.getQueryUrl();
 
 	}
@@ -119,26 +119,24 @@ public class OslcQuery {
 	private OslcQuery(OslcQuery previousQuery, String nextPageUrl) {
 		this(previousQuery.oslcClient, previousQuery.capabilityUrl, previousQuery.pageSize);
 		this.queryUrl = nextPageUrl;
-		this.queryResource.uri(nextPageUrl);
+		this.queryResource = createQueryResource(nextPageUrl);
 	}
 
-	private Resource createQueryResource() {
-		Resource resource = oslcClient.getQueryResource(this);
-		resource.accept(OSLCConstants.CT_RDF);
-		resource.header(OSLCConstants.OSLC_CORE_VERSION,"2.0");
+	private WebTarget createQueryResource(final String capabilityUri) {
+		WebTarget resource = oslcClient.getWebResource(capabilityUri);
 		applyPagination(resource);
 		applyOslcQueryParams(resource);
 		return resource;
 	}
 
-	private void applyPagination(Resource resource) {
+	private void applyPagination(WebTarget resource) {
 		if (pageSize > 0) {
 			resource.queryParam("oslc.paging", "true");
 			resource.queryParam("oslc.pageSize", pageSize);
 		}
 	}
 
-	private void applyOslcQueryParams(Resource resource) {
+	private void applyOslcQueryParams(WebTarget resource) {
 		if (this.where != null && !this.where.isEmpty()) {
 			resource.queryParam("oslc.where", this.where);
 		}
@@ -185,9 +183,9 @@ public class OslcQuery {
 		return new OslcQueryResult(this, getResponse());
 	}
 
-	ClientResponse getResponse() {
+	Response getResponse() {
 
-		ClientResponse cr = null;
+		Response cr = null;
 		// If using an OAuth client, redirect the call
 		if ( oslcClient instanceof OslcOAuthClient ){
 			try {
@@ -196,7 +194,10 @@ public class OslcQuery {
 				// Log error or raise exception
 			}
 		} else {
-			cr = queryResource.get();
+			cr = queryResource.request()
+					.accept(OSLCConstants.CT_RDF)
+					.header(OSLCConstants.OSLC_CORE_VERSION,"2.0")
+					.get();
 		}
 
 		return cr;

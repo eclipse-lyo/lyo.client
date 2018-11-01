@@ -25,7 +25,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import net.oauth.OAuthException;
 
-import org.apache.wink.client.ClientResponse;
+import javax.ws.rs.core.Response;
 import org.eclipse.lyo.client.exception.ResourceNotFoundException;
 import org.eclipse.lyo.client.oslc.OSLCConstants;
 import org.eclipse.lyo.client.oslc.OslcClient;
@@ -42,8 +42,8 @@ public final class RmUtil {
 			throws IOException, OAuthException, URISyntaxException, ResourceNotFoundException
 	{
 
-		ClientResponse response = client.getResource(serviceProviderUrl,OSLCConstants.CT_RDF);
-		ServiceProvider serviceProvider = response.getEntity(ServiceProvider.class);
+		Response response = client.getResource(serviceProviderUrl,OSLCConstants.CT_RDF);
+		ServiceProvider serviceProvider = response.readEntity(ServiceProvider.class);
 
 		if (serviceProvider != null) {
 			for (Service service:serviceProvider.getServices()) {
@@ -58,7 +58,7 @@ public final class RmUtil {
 									if (instanceShapes != null ){
 										for ( URI typeURI : instanceShapes) {
 											response = client.getResource(typeURI.toString(),OSLCConstants.CT_RDF);
-											ResourceShape resourceShape =  response.getEntity(ResourceShape.class);
+											ResourceShape resourceShape =  response.readEntity(ResourceShape.class);
 											String typeTitle = resourceShape.getTitle();
 											if ( ( typeTitle != null) && (typeTitle.equalsIgnoreCase(requiredInstanceShape)) ) {
 												return resourceShape;
