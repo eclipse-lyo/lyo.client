@@ -37,7 +37,8 @@ import net.oauth.client.OAuthClient;
 import net.oauth.client.httpclient4.HttpClient4;
 
 import org.apache.http.HttpHeaders;
-import org.glassfish.jersey.client.ClientConfig;
+
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,7 +125,7 @@ public class OslcOAuthClient extends OslcClient {
 	{
 		String authHeader = this.getAuthorizationHeader(url, HttpMethod.PUT);
 
-		ClientConfig config = getClientConfig();
+		Configuration config = getClientConfig();
 
 		Client client = ClientBuilder.newClient(config);
 		return client.target(url).request()
@@ -151,7 +152,7 @@ public class OslcOAuthClient extends OslcClient {
 	public Response createResource(final String url, final Object artifact, String mediaType, String acceptType) throws IOException, OAuthException, URISyntaxException  {
 		String authHeader = this.getAuthorizationHeader(url, HttpMethod.POST);
 
-		ClientConfig config = getClientConfig();
+		Configuration config = getClientConfig();
 
 		Client client = ClientBuilder.newClient(config);
 		return client.target(url).request()

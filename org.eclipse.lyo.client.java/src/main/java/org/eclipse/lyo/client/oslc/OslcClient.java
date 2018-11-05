@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2014 IBM Corporation and others.
+ * Copyright (c) 2018 IBM Corporation and others.
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -18,6 +18,7 @@
  *     Samuel Padgett                  - use correct trust managers and hostname verifier when updating secure socket protocol
  *     Samuel Padgett                  - don't re-register JAX-RS applications for every request
  *     Samuel Padgett                  - handle any redirect status code
+ *     Jad El-khoury                   - Migrate client from Wink to implementation-independent JAX-RS 2.0
  *******************************************************************************/
 package org.eclipse.lyo.client.oslc;
 
@@ -25,141 +26,60 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.Response.Status.Family;
-
 import net.oauth.OAuthException;
 import net.oauth.client.httpclient4.HttpClientPool;
 
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.RedirectStrategy;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.conn.ssl.X509HostnameVerifier;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
-import org.apache.http.protocol.HttpContext;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.eclipse.lyo.client.exception.ResourceNotFoundException;
-import org.eclipse.lyo.client.oslc.resources.OslcQuery;
 import org.eclipse.lyo.oslc4j.core.model.CreationFactory;
 import org.eclipse.lyo.oslc4j.core.model.QueryCapability;
 import org.eclipse.lyo.oslc4j.core.model.Service;
 import org.eclipse.lyo.oslc4j.core.model.ServiceProvider;
 import org.eclipse.lyo.oslc4j.core.model.ServiceProviderCatalog;
 import org.eclipse.lyo.oslc4j.provider.jena.JenaProvidersRegistry;
-import org.eclipse.lyo.oslc4j.provider.json4j.Json4JProvidersRegistry;
-import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
-import org.glassfish.jersey.client.ClientConfig;
-
 
 /**
- * An OSLC Client.  Provides an Apache HttpClient, an Apache Wink REST ClientConfig and defines
+ * An OSLC Client.  Provides an Apache HttpClient, a REST Client Configuration and defines
  * a getResource method which returns an Apache Wink ClientResponse.
  */
 public class OslcClient {
 
-	protected DefaultHttpClient httpClient;
+	protected HttpClient httpClient;
+	private Configuration clientConfig;
 	private HttpClientPool clientPool;
-	private ClientConfig clientConfig;
-	private String configuredSecureSocketProtocol;
-	private TrustManager[] trustManagers;
-	X509HostnameVerifier hostnameVerifier;
 
-	/**
-	 * Returns theSecure Sockect Protocol associated with this OSLC Client
-	 * @return the user configured Secure Socket Protocol
-	 */
-	public String getConfiguredSecureSocketProtocol() {
-		return configuredSecureSocketProtocol;
-	}
-
-	/**
-	 * Sets the Secure Socket Protocol to be used, valid values "TLSv1.2","TLS","SSL","SSL_TLS".
-	 */
-	public void setConfiguredSecureSocketProtocol(
-			String configuredSecureSocketProtocol) {
-		this.configuredSecureSocketProtocol = configuredSecureSocketProtocol;
-
-		// Make sure to update the trust managers and hostname verifier for the new protocol.
-		setupSSLSupport();
-	}
-
-	private static final String SECURE_SOCKET_PROTOCOL [] = new String[] {"TLSv1.2","TLS","SSL","SSL_TLS"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  //$NON-NLS-4$
-
-	/**
-	 * Initialize a new OslcClient using an Apache Http Components 4 Http client and configuration.
-	 */
+	//FIXME: The Constructors
+	// How to configure the underlying Apache httpClient instance. 
+	//especially, since we don't want to rely on any JAX-RS implementation, but only depend on the Jax-rs API.
+	//In the 2nd constructor, I assume the caller of OslcClient constructor passes in the httpClient and httpBuilder instances, leaving their configuration to be done outside of OslcClient.
+	//In the 1st constructor, we just provide such default instances, which seem to work for the most basic cases.
 	public OslcClient()
 	{
-		this((TrustManager[])null, (X509HostnameVerifier)null);
+		this(ClientBuilder.newBuilder(), HttpClientBuilder.create().build());
 	}
 
-	/**
-	 * Initialize a new OslcClient using an Apache Http Components 4 Http client and configuration.
-	 * Use the provided TrustManagers and X509HostnameVerifiers instead of the defaults which do no verification;
-	 */
-	public OslcClient(TrustManager [] trustManagers, X509HostnameVerifier hostnameVerifier)
+	public OslcClient(ClientBuilder clientBuilder, HttpClient httpClient)
 	{
-		httpClient = new DefaultHttpClient(new ThreadSafeClientConnManager());
-		httpClient.setRedirectStrategy(new RedirectStrategy() {
-			@Override
-			public HttpUriRequest getRedirect(HttpRequest request, HttpResponse response, HttpContext context)  {
-				return null;
-			}
-
-			@Override
-			public boolean isRedirected(HttpRequest request, HttpResponse response, HttpContext context) {
-				return false;
-			}
-		});
-		this.trustManagers = trustManagers;
-		this.hostnameVerifier = hostnameVerifier;
-		setupSSLSupport();
-		clientPool = new OAuthHttpPool();
-//		clientConfig = new ApacheHttpClientConfig(httpClient);
-//		javax.ws.rs.core.Application app = new javax.ws.rs.core.Application() {
-//			@Override
-//			public Set<Class<?>> getClasses() {
-//				Set<Class<?>> classes = new HashSet<Class<?>>();
-//				classes.addAll(JenaProvidersRegistry.getProviders());
-//				classes.addAll(Json4JProvidersRegistry.getProviders());
-//				return classes;
-//			}
-//		};
-//		clientConfig = clientConfig.applications(app);
-
-		//FIXME: We need to use the above Apache httpClient when setting this clientConfig.
-		clientConfig = new ClientConfig().connectorProvider(new ApacheConnectorProvider());
 		for (Class<?> provider : JenaProvidersRegistry.getProviders()) {
-			clientConfig.register(provider);
+			clientBuilder.register(provider);
 		}
-		
-//		ClientBuilder clientBuilder = ClientBuilder.newBuilder();
-//		Configuration clientConfig = clientBuilder.getConfiguration();
+
+		this.httpClient = httpClient;
+		clientConfig = clientBuilder.getConfiguration();
+		clientPool = new OAuthHttpPool();
 	}
 
 	/**
@@ -174,7 +94,7 @@ public class OslcClient {
 		return clientPool;
 	}
 
-	protected ClientConfig getClientConfig() {
+	protected Configuration getClientConfig() {
 		return clientConfig;
 	}
 
@@ -483,7 +403,7 @@ public class OslcClient {
 	/**
 	 * Lookup the URL of a specific OSLC Service Provider in an OSLC Catalog using the service provider's title
 	 *
-	 * @param catalogUrl
+s	 * @param catalogUrl
 	 * @param serviceProviderTitle
 	 * @return
 	 * @throws IOException
@@ -677,85 +597,4 @@ public class OslcClient {
 	{
 		return lookupCreationFactoryResource(serviceProviderUrl, oslcDomain, oslcResourceType, oslcUsage).getCreation().toString();
 	}
-
-	/**
-	 * Looks up and select an installed security context provider
-	 *
-	 * @return An installed SSLContext Provider
-	 * @throws NoSuchAlgorithmException when no suitable provider is installed
-	 */
-	private SSLContext findInstalledSecurityContext() throws NoSuchAlgorithmException {
-
-		if ( configuredSecureSocketProtocol != null ) {
-			SSLContext sslContext = null;
-			try {
-				sslContext = SSLContext.getInstance(configuredSecureSocketProtocol);
-			}
-			catch (NoSuchAlgorithmException e) {
-				// Ignore Exception, we will try other default values below
-			}
-			if ( sslContext != null ){
-				return sslContext;
-			}
-		}
-
-		// walks through list of secure socked protocols and picks the first found
-		// the list is arranged in level of security order
-		for (String aSecuredProtocol : SECURE_SOCKET_PROTOCOL) {
-			try {
-				return SSLContext.getInstance(aSecuredProtocol);
-			} catch (NoSuchAlgorithmException e) {
-				continue;
-			}
-		}
-
-		throw new NoSuchAlgorithmException("No suitable secured socket provider is installed"); //$NON-NLS-1$
-	}
-
-	private void setupSSLSupport()   {
-		ClientConnectionManager connManager = httpClient.getConnectionManager();
-		SchemeRegistry schemeRegistry = connManager.getSchemeRegistry();
-		schemeRegistry.unregister("https");
-		/** Create a trust manager that does not validate certificate chains */
-		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-			@Override
-			public void checkClientTrusted(
-					java.security.cert.X509Certificate[] certs, String authType) {
-				/** Ignore Method Call */
-			}
-
-			@Override
-			public void checkServerTrusted(
-					java.security.cert.X509Certificate[] certs, String authType) {
-				/** Ignore Method Call */
-			}
-
-			@Override
-			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-				return null;
-			}
-		} };
-
-		try {
-			SSLContext sc = findInstalledSecurityContext();
-			if (trustManagers == null) {
-				trustManagers = trustAllCerts;
-			}
-			if (hostnameVerifier == null) {
-				hostnameVerifier = SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
-			}
-			sc.init(null, trustManagers, new java.security.SecureRandom());
-			SSLSocketFactory sf = new SSLSocketFactory(sc,hostnameVerifier);
-			Scheme https = new Scheme("https", 443, sf); //$NON-NLS-1$
-			schemeRegistry.register(https);
-		} catch (NoSuchAlgorithmException e) {
-			/* Fail Silently */
-		} catch (KeyManagementException e) {
-			/* Fail Silently */
-		}
-
-
-	}
-
-
 }
