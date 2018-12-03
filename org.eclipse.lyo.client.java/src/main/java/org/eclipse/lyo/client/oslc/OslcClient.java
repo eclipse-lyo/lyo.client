@@ -50,6 +50,7 @@ import org.eclipse.lyo.oslc4j.core.model.Service;
 import org.eclipse.lyo.oslc4j.core.model.ServiceProvider;
 import org.eclipse.lyo.oslc4j.core.model.ServiceProviderCatalog;
 import org.eclipse.lyo.oslc4j.provider.jena.JenaProvidersRegistry;
+import org.eclipse.lyo.oslc4j.provider.json4j.Json4JProvidersRegistry;
 
 /**
  * An OSLC Client.  Provides an Apache HttpClient, a REST Client Configuration and defines
@@ -74,6 +75,9 @@ public class OslcClient {
 	public OslcClient(ClientBuilder clientBuilder, HttpClient httpClient)
 	{
 		for (Class<?> provider : JenaProvidersRegistry.getProviders()) {
+			clientBuilder.register(provider);
+		}
+		for (Class<?> provider : Json4JProvidersRegistry.getProviders()) {
 			clientBuilder.register(provider);
 		}
 
