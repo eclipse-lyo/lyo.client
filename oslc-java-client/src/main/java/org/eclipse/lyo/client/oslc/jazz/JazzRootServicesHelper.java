@@ -22,7 +22,7 @@ import java.io.InputStream;
 
 import javax.ws.rs.core.UriBuilder;
 
-import org.apache.wink.client.ClientResponse;
+import javax.ws.rs.core.Response;
 import org.eclipse.lyo.client.exception.ResourceNotFoundException;
 import org.eclipse.lyo.client.exception.RootServicesException;
 import org.eclipse.lyo.client.oslc.OSLCConstants;
@@ -168,8 +168,8 @@ public class JazzRootServicesHelper {
 	{
 		try {
 			OslcClient rootServicesClient = new OslcClient();
-			ClientResponse response = rootServicesClient.getResource(rootServicesUrl,OSLCConstants.CT_RDF);
-			InputStream is = response.getEntity(InputStream.class);
+			Response response = rootServicesClient.getResource(rootServicesUrl,OSLCConstants.CT_RDF);
+			InputStream is = response.readEntity(InputStream.class);
 			rdfModel = ModelFactory.createDefaultModel();
 			rdfModel.read(is,rootServicesUrl);
 

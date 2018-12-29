@@ -26,7 +26,7 @@ import java.util.Iterator;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 
-import org.apache.wink.client.ClientResponse;
+import javax.ws.rs.core.Response;
 import org.eclipse.lyo.client.oslc.OSLCConstants;
 import org.eclipse.lyo.oslc4j.core.exception.OslcCoreApplicationException;
 import org.eclipse.lyo.oslc4j.core.model.OslcConstants;
@@ -84,7 +84,7 @@ public class OslcQueryResult implements Iterator<OslcQueryResult> {
 
 	private final OslcQuery query;
 
-	private final ClientResponse response;
+	private final Response response;
 
 	private final int pageNumber;
 
@@ -98,7 +98,7 @@ public class OslcQueryResult implements Iterator<OslcQueryResult> {
 
 	private boolean rdfInitialized = false;
 
-	public OslcQueryResult(OslcQuery query, ClientResponse response) {
+	public OslcQueryResult(OslcQuery query, Response response) {
 		this.query = query;
 		this.response = response;
 
@@ -121,7 +121,7 @@ public class OslcQueryResult implements Iterator<OslcQueryResult> {
 		if (!rdfInitialized) {
 			rdfInitialized = true;
 			rdfModel = ModelFactory.createDefaultModel();
-			rdfModel.read(response.getEntity(InputStream.class), query.getCapabilityUrl());
+			rdfModel.read(response.readEntity(InputStream.class), query.getCapabilityUrl());
 
 			//Find a resource with rdf:type of oslc:ResourceInfo
 			Property rdfType = rdfModel.createProperty(OslcConstants.RDF_NAMESPACE, "type");
@@ -212,7 +212,7 @@ public class OslcQueryResult implements Iterator<OslcQueryResult> {
 	 *
 	 * @return
 	 */
-	public ClientResponse getRawResponse() {
+	public Response getRawResponse() {
 		return response;
 	}
 

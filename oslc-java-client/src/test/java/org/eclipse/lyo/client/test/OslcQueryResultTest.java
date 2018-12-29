@@ -23,7 +23,8 @@ import static org.mockito.Mockito.when;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 
-import org.apache.wink.client.ClientResponse;
+
+import javax.ws.rs.core.Response;
 import org.eclipse.lyo.client.oslc.OslcClient;
 import org.eclipse.lyo.client.oslc.resources.OslcQuery;
 import org.eclipse.lyo.client.oslc.resources.OslcQueryParameters;
@@ -43,7 +44,7 @@ public class OslcQueryResultTest {
 
 	@Test
 	public void testEmpty() {
-		 ClientResponse mockedResponse = mockClientResponse("/emptyQuery.rdf");
+		 Response mockedResponse = mockClientResponse("/emptyQuery.rdf");
 
 		 OslcQueryParameters params = new OslcQueryParameters();
 		 params.setWhere("dceterms:identifier=3");
@@ -54,7 +55,7 @@ public class OslcQueryResultTest {
 
 	@Test
 	public void testNoParameters() {
-		 ClientResponse mockedResponse = mockClientResponse("/noParamQuery.rdf");
+		 Response mockedResponse = mockClientResponse("/noParamQuery.rdf");
 
 		 OslcQuery query = new OslcQuery(new OslcClient(), "http://example.com/provider/query");
 		 OslcQueryResult result = new OslcQueryResult(query, mockedResponse);
@@ -63,7 +64,7 @@ public class OslcQueryResultTest {
 
 	@Test
 	public void testQuery() {
-		 ClientResponse mockedResponse = mockClientResponse("/queryResponse.rdf");
+		 Response mockedResponse = mockClientResponse("/queryResponse.rdf");
 
 		 OslcQueryParameters params = new OslcQueryParameters();
 		 params.setWhere("ex:product=\"Product A\"");
@@ -74,7 +75,7 @@ public class OslcQueryResultTest {
 
 	@Test
 	public void testBlogQuery() {
-		 ClientResponse mockedResponse = mockClientResponse("/blogQuery.rdf");
+		 Response mockedResponse = mockClientResponse("/blogQuery.rdf");
 
 		 OslcQueryParameters params = new OslcQueryParameters();
 		 params.setSelect("dcterms:title");
@@ -87,7 +88,7 @@ public class OslcQueryResultTest {
 	@Test
 	public void testAnyMember() {
 		System.setProperty(OslcQueryResult.SELECT_ANY_MEMBER, "true");
-		 ClientResponse mockedResponse = mockClientResponse("/blogQuery.rdf");
+		 Response mockedResponse = mockClientResponse("/blogQuery.rdf");
 
 		 OslcQueryParameters params = new OslcQueryParameters();
 		 params.setSelect("dcterms:title");
@@ -96,10 +97,10 @@ public class OslcQueryResultTest {
 		 assertEquals(5, result.getMembersUrls().length);
 	}
 
-	private ClientResponse mockClientResponse(String file) {
+	private Response mockClientResponse(String file) {
 		final InputStream is = OslcQueryResultTest.class.getResourceAsStream(file);
-		ClientResponse mockedResponse = Mockito.mock(ClientResponse.class);
-		when(mockedResponse.getEntity(InputStream.class)).thenReturn(is);
+		Response mockedResponse = Mockito.mock(Response.class);
+		when(mockedResponse.readEntity(InputStream.class)).thenReturn(is);
 
 		return mockedResponse;
     }
