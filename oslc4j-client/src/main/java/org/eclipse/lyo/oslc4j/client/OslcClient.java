@@ -38,6 +38,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.jena.rdf.model.Model;
@@ -440,6 +441,10 @@ s	 * @param catalogUrl
 	{
 		String retval = null;
 		Response response = getResource(catalogUrl,OSLCConstants.CT_RDF);
+		if (response.getStatus() != HttpStatus.SC_OK) {
+			logger.error("Cannot read "+catalogUrl+" status: "+response.getStatus());
+			return null;
+		}
 		ServiceProviderCatalog catalog = response.readEntity(ServiceProviderCatalog.class);
 
 		if (catalog != null) {
@@ -671,6 +676,10 @@ s	 * @param catalogUrl
 
 		try {
 			Response response = this.getResource(rootServicesUrl,OSLCConstants.CT_RDF);
+			if (response.getStatus() != HttpStatus.SC_OK) {
+				logger.error("Cannot read "+rootServicesUrl+" status: "+response.getStatus());
+				return null;
+			}
 			InputStream is = response.readEntity(InputStream.class);
 			rdfModel = ModelFactory.createDefaultModel();
 			rdfModel.read(is,rootServicesUrl);

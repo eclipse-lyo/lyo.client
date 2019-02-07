@@ -135,6 +135,11 @@ public class IECMSample {
 
 			//STEP 5: Find the OSLC Service Provider for the project area we want to work with
 			String serviceProviderUrl = client.lookupServiceProviderUrl(catalogUrl, projectArea);
+			
+			if (catalogUrl == null || serviceProviderUrl == null) {
+				System.err.println("Cannot perofrm OSLC discover, exiting...");
+				System.exit(-1);
+			}
 
 			//STEP 6: Get the Query Capabilities URL so that we can run some OSLC queries
 			String queryCapability = client.lookupQueryCapability(serviceProviderUrl,

@@ -88,6 +88,11 @@ public class RMSample {
 
 			//STEP 2: Find the OSLC Service Provider for the service provider we want to work with
 			String serviceProviderUrl = client.lookupServiceProviderUrl(catalogUrl, providerTitle);
+			if (serviceProviderUrl == null) {
+				System.err.println("Cannot perofrm OSLC discover, exiting...");
+				System.exit(-1);
+			}
+
 
 			//STEP 3: Get the Query Capabilities and Creation Factory URLs so that we can run some OSLC queries
 			String queryCapability = client.lookupQueryCapability(serviceProviderUrl,
