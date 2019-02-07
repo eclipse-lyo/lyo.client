@@ -18,7 +18,7 @@
  *     Samuel Padgett       - support allowed and default values other than string
  *     Samuel Padgett       - copy from lyo.core and modify specifically for automation plans
  *******************************************************************************/
-package org.eclipse.lyo.client.oslc.resources;
+package org.eclipse.lyo.client.resources;
 
 import java.net.URI;
 import java.net.URISyntaxException;

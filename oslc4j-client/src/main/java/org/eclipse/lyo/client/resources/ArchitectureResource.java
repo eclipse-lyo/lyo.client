@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 IBM Corporation.
+ * Copyright (c) 2013, 2014 IBM Corporation.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -11,9 +11,9 @@
  *
  * Contributors:
  *
- *     Paul McMahan <pmcmahan@us.ibm.com>        - initial implementation
+ *     Michael Fiedler       - initial implementation
  *******************************************************************************/
-package org.eclipse.lyo.client.oslc.resources;
+package org.eclipse.lyo.client.resources;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -21,7 +21,6 @@ import java.util.Date;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.eclipse.lyo.oslc4j.core.annotation.OslcAllowedValue;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcDescription;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcName;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcNamespace;
@@ -33,52 +32,50 @@ import org.eclipse.lyo.oslc4j.core.annotation.OslcResourceShape;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcTitle;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcValueType;
 import org.eclipse.lyo.oslc4j.core.model.AbstractResource;
-import org.eclipse.lyo.oslc4j.core.model.Link;
 import org.eclipse.lyo.oslc4j.core.model.Occurs;
 import org.eclipse.lyo.oslc4j.core.model.OslcConstants;
 import org.eclipse.lyo.oslc4j.core.model.ValueType;
 
-@OslcResourceShape(title = "Automation Request Resource Shape", describes = AutomationConstants.TYPE_AUTOMATION_REQUEST)
-@OslcNamespace(AutomationConstants.AUTOMATION_NAMESPACE)
+@OslcResourceShape(title = "Architecture Management Resource Resource Shape", describes = ArchitectureConstants.TYPE_ARCHITECTURE_RESOURCE)
+@OslcNamespace(ArchitectureConstants.ARCHITECTURE_NAMESPACE)
+@OslcName(ArchitectureConstants.ARCHITECTURE_RESOURCE)
 /**
- * @see http://open-services.net/wiki/automation/OSLC-Automation-Specification-Version-2.0/#Resource_AutomationRequest
+ * @see http://open-services.net/wiki/architecture-management/OSLC-Architecture-Management-Specification-Version-2.0/
  */
-public final class AutomationRequest
+public final class ArchitectureResource
 extends AbstractResource
 {
 	private final Set<URI>      contributors                = new TreeSet<URI>();
     private final Set<URI>      creators                    = new TreeSet<URI>();
+    private final Set<String>   dctermsTypes                = new TreeSet<String>();
     private final Set<URI>      rdfTypes                    = new TreeSet<URI>();
-    private final Set<String>   subjects                    = new TreeSet<String>();
-    private final Set<URI>      states                      = new TreeSet<URI>();
-    private final Set<ParameterInstance> inputParameters    = new TreeSet<ParameterInstance>();
+
 
     private Date     created;
     private String   description;
     private String   identifier;
+    private URI      source;
     private URI      instanceShape;
     private Date     modified;
     private URI      serviceProvider;
     private String   title;
-    private URI      desiredState;
-    private Link      executesAutomationPlan;
 
-	public AutomationRequest()
+	public ArchitectureResource()
 	{
 		super();
 
-		rdfTypes.add(URI.create(AutomationConstants.TYPE_AUTOMATION_REQUEST));
+		rdfTypes.add(URI.create(ArchitectureConstants.TYPE_ARCHITECTURE_RESOURCE));
 	}
 
-    public AutomationRequest(final URI about)
+    public ArchitectureResource(final URI about)
      {
          super(about);
 
-		rdfTypes.add(URI.create(AutomationConstants.TYPE_AUTOMATION_REQUEST));
+		rdfTypes.add(URI.create(ArchitectureConstants.TYPE_ARCHITECTURE_RESOURCE));
      }
 
     protected URI getRdfType() {
-    	return URI.create(AutomationConstants.TYPE_AUTOMATION_REQUEST);
+    	return URI.create(ArchitectureConstants.TYPE_ARCHITECTURE_RESOURCE);
     }
 
     public void addContributor(final URI contributor)
@@ -96,22 +93,13 @@ extends AbstractResource
         this.rdfTypes.add(rdfType);
     }
 
-    public void addSubject(final String subject)
+    public void addDctermsType(final String dctermsType)
     {
-        this.subjects.add(subject);
+        this.dctermsTypes.add(dctermsType);
     }
 
-    public void addState(final URI state)
-    {
-        this.states.add(state);
-    }
 
-    public void addInputParameter(final ParameterInstance parameter)
-    {
-        this.inputParameters.add(parameter);
-    }
-
-    @OslcDescription("The person(s) who are responsible for the work needed to complete the automation request.")
+    @OslcDescription("The person(s) who are responsible for the work needed to complete the automation plan.")
     @OslcName("contributor")
     @OslcPropertyDefinition(OslcConstants.DCTERMS_NAMESPACE + "contributor")
     @OslcRange(QmConstants.TYPE_PERSON)
@@ -133,7 +121,7 @@ extends AbstractResource
     @OslcDescription("Creator or creators of resource.")
     @OslcName("creator")
     @OslcPropertyDefinition(OslcConstants.DCTERMS_NAMESPACE + "creator")
-    @OslcRange(QmConstants.TYPE_PERSON)
+    @OslcRange(ArchitectureConstants.TYPE_PERSON)
     @OslcTitle("Creators")
     public URI[] getCreators()
     {
@@ -186,50 +174,32 @@ extends AbstractResource
         return rdfTypes.toArray(new URI[rdfTypes.size()]);
     }
 
+    @OslcDescription("A short string representation for the type, example 'Defect'.")
+    @OslcName("type")
+    @OslcPropertyDefinition(OslcConstants.DCTERMS_NAMESPACE + "type")
+    @OslcTitle("DCTerms Types")
+    public String[] getDctermsTypes()
+    {
+        return dctermsTypes.toArray(new String[dctermsTypes.size()]);
+    }
+
+    @OslcDescription("The resource URI a client can perform a get on to obtain the original non-OSLC AM formatted resource that was used to create this resource. ")
+    @OslcPropertyDefinition(OslcConstants.DCTERMS_NAMESPACE + "source")
+    @OslcTitle("Source")
+    public URI getSource()
+    {
+        return source;
+    }
+
     @OslcDescription("The scope of a resource is a URI for the resource's OSLC Service Provider.")
     @OslcPropertyDefinition(OslcConstants.OSLC_CORE_NAMESPACE + "serviceProvider")
+    @OslcRange(OslcConstants.TYPE_SERVICE_PROVIDER)
     @OslcTitle("Service Provider")
     public URI getServiceProvider()
     {
         return serviceProvider;
     }
 
-    @OslcDescription("Used to indicate the desired state of the Automation Request based on values defined by the service provider.")
-    @OslcPropertyDefinition(AutomationConstants.AUTOMATION_NAMESPACE + "desiredState")
-    @OslcName("desiredState")
-    @OslcOccurs(Occurs.ZeroOrOne)
-    @OslcTitle("Desired State")
-    @OslcAllowedValue({
-    	AutomationConstants.AUTOMATION_NAMESPACE + AutomationConstants.STATE_NEW,
-		AutomationConstants.AUTOMATION_NAMESPACE + AutomationConstants.STATE_IN_PROGRESS,
-		AutomationConstants.AUTOMATION_NAMESPACE + AutomationConstants.STATE_QUEUED,
-		AutomationConstants.AUTOMATION_NAMESPACE + AutomationConstants.STATE_CANCELING,
-		AutomationConstants.AUTOMATION_NAMESPACE + AutomationConstants.STATE_CANCELED,
-		AutomationConstants.AUTOMATION_NAMESPACE + AutomationConstants.STATE_COMPLETE})
-    public URI getDesiredState()
-    {
-        return desiredState;
-    }
-
-    @OslcDescription("Automation Plan run by the Automation Request.")
-    @OslcPropertyDefinition(AutomationConstants.AUTOMATION_NAMESPACE + "executesAutomationPlan")
-    @OslcName("executesAutomationPlan")
-    @OslcOccurs(Occurs.ExactlyOne)
-    @OslcTitle("Executes Automation Plan")
-    public Link getExecutesAutomationPlan()
-    {
-        return executesAutomationPlan;
-    }
-
-    @OslcDescription("Tag or keyword for a resource. Each occurrence of a dcterms:subject property denotes an additional tag for the resource.")
-    @OslcName("subject")
-    @OslcPropertyDefinition(OslcConstants.DCTERMS_NAMESPACE + "subject")
-    @OslcReadOnly(false)
-    @OslcTitle("Subjects")
-    public String[] getSubjects()
-    {
-        return subjects.toArray(new String[subjects.size()]);
-    }
 
     @OslcDescription("Title (reference: Dublin Core) or often a single line summary of the resource represented as rich text in XHTML content.")
     @OslcOccurs(Occurs.ExactlyOne)
@@ -241,35 +211,6 @@ extends AbstractResource
         return title;
     }
 
-    @OslcDescription("Used to indicate the state of the automation request based on values defined by the service provider.")
-    @OslcOccurs(Occurs.OneOrMany)
-    @OslcReadOnly(true)
-    @OslcName("state")
-    @OslcPropertyDefinition(AutomationConstants.AUTOMATION_NAMESPACE + "state")
-    @OslcTitle("States")
-    @OslcAllowedValue({
-    	AutomationConstants.AUTOMATION_NAMESPACE + AutomationConstants.STATE_NEW,
-		AutomationConstants.AUTOMATION_NAMESPACE + AutomationConstants.STATE_IN_PROGRESS,
-		AutomationConstants.AUTOMATION_NAMESPACE + AutomationConstants.STATE_QUEUED,
-		AutomationConstants.AUTOMATION_NAMESPACE + AutomationConstants.STATE_CANCELING,
-		AutomationConstants.AUTOMATION_NAMESPACE + AutomationConstants.STATE_CANCELED,
-		AutomationConstants.AUTOMATION_NAMESPACE + AutomationConstants.STATE_COMPLETE})
-    public URI[] getStates()
-    {
-        return states.toArray(new URI[states.size()]);
-    }
-
-
-    @OslcDescription("Parameters provided when Automation Requests are created.")
-    @OslcOccurs(Occurs.ZeroOrMany)
-    @OslcName("inputParameter")
-    @OslcPropertyDefinition(AutomationConstants.AUTOMATION_NAMESPACE + "inputParameter")
-    @OslcReadOnly(false)
-    @OslcTitle("Input Parameter")
-    public ParameterInstance[] getInputParameters()
-    {
-        return inputParameters.toArray(new ParameterInstance[inputParameters.size()]);
-    }
 
     public void setContributors(final URI[] contributors)
     {
@@ -326,54 +267,30 @@ extends AbstractResource
         }
     }
 
+    public void setDctermsTypes(final String[] dctermsTypes)
+    {
+        this.dctermsTypes.clear();
+
+        if (dctermsTypes != null)
+        {
+            this.dctermsTypes.addAll(Arrays.asList(dctermsTypes));
+        }
+    }
+
+    public void setSource(final URI source)
+    {
+        this.source = source;
+    }
+
     public void setServiceProvider(final URI serviceProvider)
     {
         this.serviceProvider = serviceProvider;
     }
 
-    public void setDesiredState(final URI desiredState)
-    {
-        this.desiredState = desiredState;
-    }
-
-    public void setExecutesAutomationPlan(final Link executesAutomationPlan)
-    {
-        this.executesAutomationPlan = executesAutomationPlan;
-    }
-
-    public void setSubjects(final String[] subjects)
-    {
-        this.subjects.clear();
-
-        if (subjects != null)
-        {
-            this.subjects.addAll(Arrays.asList(subjects));
-        }
-    }
 
     public void setTitle(final String title)
     {
         this.title = title;
-    }
-
-    public void setStates(final URI[] states)
-    {
-        this.states.clear();
-
-        if (states != null)
-        {
-            this.states.addAll(Arrays.asList(states));
-        }
-    }
-
-    public void setInputParameters(final ParameterInstance[] parameters)
-    {
-        this.inputParameters.clear();
-
-        if (parameters != null)
-        {
-            this.inputParameters.addAll(Arrays.asList(parameters));
-        }
     }
 
 }

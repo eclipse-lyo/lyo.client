@@ -13,7 +13,7 @@
  *
  *     Paul McMahan         - initial API and implementation
  *******************************************************************************/
-package org.eclipse.lyo.client.oslc.resources;
+package org.eclipse.lyo.client.resources;
 
 import java.net.URI;
 import java.util.Arrays;

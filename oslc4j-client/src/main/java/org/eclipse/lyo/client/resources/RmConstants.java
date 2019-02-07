@@ -14,7 +14,7 @@
  *     Gabriel Ruelas       - initial API and implementation
  *     Carlos A Arreola     - initial API and implementation
  *******************************************************************************/
-package org.eclipse.lyo.client.oslc.resources;
+package org.eclipse.lyo.client.resources;
 
 import javax.xml.namespace.QName;
 

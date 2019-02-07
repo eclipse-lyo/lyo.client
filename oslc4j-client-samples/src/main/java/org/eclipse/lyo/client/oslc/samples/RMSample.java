@@ -24,13 +24,13 @@ import java.util.logging.Logger;
 
 import org.apache.http.HttpStatus;
 import javax.ws.rs.core.Response;
-import org.eclipse.lyo.client.oslc.OSLCConstants;
-import org.eclipse.lyo.client.oslc.OslcClient;
-import org.eclipse.lyo.client.oslc.resources.Requirement;
-import org.eclipse.lyo.client.oslc.resources.OslcQuery;
-import org.eclipse.lyo.client.oslc.resources.OslcQueryParameters;
-import org.eclipse.lyo.client.oslc.resources.OslcQueryResult;
-import org.eclipse.lyo.client.oslc.resources.Requirement;
+
+import org.eclipse.lyo.client.OSLCConstants;
+import org.eclipse.lyo.client.OslcClient;
+import org.eclipse.lyo.client.resources.OslcQuery;
+import org.eclipse.lyo.client.resources.OslcQueryParameters;
+import org.eclipse.lyo.client.resources.OslcQueryResult;
+import org.eclipse.lyo.client.resources.Requirement;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Options;

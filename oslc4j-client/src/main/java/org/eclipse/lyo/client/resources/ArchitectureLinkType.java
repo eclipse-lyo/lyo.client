@@ -13,7 +13,7 @@
  *
  *     Michael Fiedler       - initial implementation
  *******************************************************************************/
-package org.eclipse.lyo.client.oslc.resources;
+package org.eclipse.lyo.client.resources;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -30,52 +30,49 @@ import org.eclipse.lyo.oslc4j.core.annotation.OslcRange;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcReadOnly;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcResourceShape;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcTitle;
-import org.eclipse.lyo.oslc4j.core.annotation.OslcValueType;
 import org.eclipse.lyo.oslc4j.core.model.AbstractResource;
 import org.eclipse.lyo.oslc4j.core.model.Occurs;
 import org.eclipse.lyo.oslc4j.core.model.OslcConstants;
-import org.eclipse.lyo.oslc4j.core.model.ValueType;
 
-@OslcResourceShape(title = "Architecture Management Resource Resource Shape", describes = ArchitectureConstants.TYPE_ARCHITECTURE_RESOURCE)
+@OslcResourceShape(title = "Architecture Management LinkType Resource Shape", describes = ArchitectureConstants.TYPE_ARCHITECTURE_LINK_TYPE)
 @OslcNamespace(ArchitectureConstants.ARCHITECTURE_NAMESPACE)
-@OslcName(ArchitectureConstants.ARCHITECTURE_RESOURCE)
+@OslcName(ArchitectureConstants.ARCHITECTURE_LINK_TYPE)
 /**
  * @see http://open-services.net/wiki/architecture-management/OSLC-Architecture-Management-Specification-Version-2.0/
  */
-public final class ArchitectureResource
+public final class ArchitectureLinkType
 extends AbstractResource
 {
 	private final Set<URI>      contributors                = new TreeSet<URI>();
     private final Set<URI>      creators                    = new TreeSet<URI>();
-    private final Set<String>   dctermsTypes                = new TreeSet<String>();
     private final Set<URI>      rdfTypes                    = new TreeSet<URI>();
 
 
     private Date     created;
-    private String   description;
+    private String   comment;
+    private String   label;
     private String   identifier;
-    private URI      source;
     private URI      instanceShape;
     private Date     modified;
     private URI      serviceProvider;
-    private String   title;
 
-	public ArchitectureResource()
+
+	public ArchitectureLinkType()
 	{
 		super();
 
-		rdfTypes.add(URI.create(ArchitectureConstants.TYPE_ARCHITECTURE_RESOURCE));
+		rdfTypes.add(URI.create(ArchitectureConstants.TYPE_ARCHITECTURE_LINK_TYPE));
 	}
 
-    public ArchitectureResource(final URI about)
+    public ArchitectureLinkType(final URI about)
      {
          super(about);
 
-		rdfTypes.add(URI.create(ArchitectureConstants.TYPE_ARCHITECTURE_RESOURCE));
+		rdfTypes.add(URI.create(ArchitectureConstants.TYPE_ARCHITECTURE_LINK_TYPE));
      }
 
     protected URI getRdfType() {
-    	return URI.create(ArchitectureConstants.TYPE_ARCHITECTURE_RESOURCE);
+    	return URI.create(ArchitectureConstants.TYPE_ARCHITECTURE_LINK_TYPE);
     }
 
     public void addContributor(final URI contributor)
@@ -92,12 +89,6 @@ extends AbstractResource
     {
         this.rdfTypes.add(rdfType);
     }
-
-    public void addDctermsType(final String dctermsType)
-    {
-        this.dctermsTypes.add(dctermsType);
-    }
-
 
     @OslcDescription("The person(s) who are responsible for the work needed to complete the automation plan.")
     @OslcName("contributor")
@@ -128,13 +119,22 @@ extends AbstractResource
         return creators.toArray(new URI[creators.size()]);
     }
 
-    @OslcDescription("Descriptive text (reference: Dublin Core) about resource represented as rich text in XHTML content.")
-    @OslcPropertyDefinition(OslcConstants.DCTERMS_NAMESPACE + "description")
-    @OslcTitle("Description")
-    @OslcValueType(ValueType.XMLLiteral)
-    public String getDescription()
+    @OslcDescription("The human readable name for this link type.")
+    @OslcPropertyDefinition(OslcConstants.RDFS_NAMESPACE + "label")
+    @OslcTitle("Label")
+    @OslcOccurs(Occurs.ExactlyOne)
+    public String getLabel()
     {
-        return description;
+        return label;
+    }
+
+    @OslcDescription("Descriptive text about link type. ")
+    @OslcPropertyDefinition(OslcConstants.RDFS_NAMESPACE + "comment")
+    @OslcTitle("Comment")
+    @OslcOccurs(Occurs.ZeroOrOne)
+    public String getComment()
+    {
+        return comment;
     }
 
     @OslcDescription("A unique identifier for a resource. Assigned by the service provider when a resource is created. Not intended for end-user display.")
@@ -174,23 +174,6 @@ extends AbstractResource
         return rdfTypes.toArray(new URI[rdfTypes.size()]);
     }
 
-    @OslcDescription("A short string representation for the type, example 'Defect'.")
-    @OslcName("type")
-    @OslcPropertyDefinition(OslcConstants.DCTERMS_NAMESPACE + "type")
-    @OslcTitle("DCTerms Types")
-    public String[] getDctermsTypes()
-    {
-        return dctermsTypes.toArray(new String[dctermsTypes.size()]);
-    }
-
-    @OslcDescription("The resource URI a client can perform a get on to obtain the original non-OSLC AM formatted resource that was used to create this resource. ")
-    @OslcPropertyDefinition(OslcConstants.DCTERMS_NAMESPACE + "source")
-    @OslcTitle("Source")
-    public URI getSource()
-    {
-        return source;
-    }
-
     @OslcDescription("The scope of a resource is a URI for the resource's OSLC Service Provider.")
     @OslcPropertyDefinition(OslcConstants.OSLC_CORE_NAMESPACE + "serviceProvider")
     @OslcRange(OslcConstants.TYPE_SERVICE_PROVIDER)
@@ -199,18 +182,6 @@ extends AbstractResource
     {
         return serviceProvider;
     }
-
-
-    @OslcDescription("Title (reference: Dublin Core) or often a single line summary of the resource represented as rich text in XHTML content.")
-    @OslcOccurs(Occurs.ExactlyOne)
-    @OslcPropertyDefinition(OslcConstants.DCTERMS_NAMESPACE + "title")
-    @OslcTitle("Title")
-    @OslcValueType(ValueType.XMLLiteral)
-    public String getTitle()
-    {
-        return title;
-    }
-
 
     public void setContributors(final URI[] contributors)
     {
@@ -237,9 +208,14 @@ extends AbstractResource
         }
     }
 
-    public void setDescription(final String description)
+    public void setLabel(final String label)
     {
-        this.description = description;
+        this.label = label;
+    }
+
+    public void setComment(final String comment)
+    {
+        this.comment = comment;
     }
 
     public void setIdentifier(final String identifier)
@@ -267,30 +243,9 @@ extends AbstractResource
         }
     }
 
-    public void setDctermsTypes(final String[] dctermsTypes)
-    {
-        this.dctermsTypes.clear();
-
-        if (dctermsTypes != null)
-        {
-            this.dctermsTypes.addAll(Arrays.asList(dctermsTypes));
-        }
-    }
-
-    public void setSource(final URI source)
-    {
-        this.source = source;
-    }
-
     public void setServiceProvider(final URI serviceProvider)
     {
         this.serviceProvider = serviceProvider;
-    }
-
-
-    public void setTitle(final String title)
-    {
-        this.title = title;
     }
 
 }

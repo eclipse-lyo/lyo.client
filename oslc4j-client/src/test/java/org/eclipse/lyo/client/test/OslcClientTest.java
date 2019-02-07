@@ -22,9 +22,10 @@ import java.net.URISyntaxException;
 import javax.xml.namespace.QName;
 
 import javax.ws.rs.ClientErrorException;
-import org.eclipse.lyo.client.oslc.OSLCConstants;
-import org.eclipse.lyo.client.oslc.OslcClient;
-import org.eclipse.lyo.client.oslc.resources.AutomationRequest;
+
+import org.eclipse.lyo.client.OSLCConstants;
+import org.eclipse.lyo.client.OslcClient;
+import org.eclipse.lyo.client.resources.AutomationRequest;
 import org.junit.Ignore;
 import org.junit.Test;
 

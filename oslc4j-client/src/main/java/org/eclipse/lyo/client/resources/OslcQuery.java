@@ -13,13 +13,15 @@
  *
  *     Sean Kennedy     - initial API and implementation
  *******************************************************************************/
-package org.eclipse.lyo.client.oslc.resources;
+package org.eclipse.lyo.client.resources;
 
 
 import javax.ws.rs.core.Response;
+
+import org.eclipse.lyo.client.OSLCConstants;
+import org.eclipse.lyo.client.OslcClient;
+
 import javax.ws.rs.client.WebTarget;
-import org.eclipse.lyo.client.oslc.OSLCConstants;
-import org.eclipse.lyo.client.oslc.OslcClient;
 
 /**
  * Represents an OSLC query (HTTP GET) request to be made of a remote system.

@@ -15,7 +15,7 @@
  *	 Carlos A Arreola	 - initial API and implementation
  *	 Samuel Padgett	   - avoid unnecessary URISyntaxException
  *******************************************************************************/
-package org.eclipse.lyo.client.oslc.resources;
+package org.eclipse.lyo.client.resources;
 
 import java.net.URI;
 import java.util.Arrays;

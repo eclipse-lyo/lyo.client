@@ -13,7 +13,7 @@
  *
  *     Michael Fiedler        - initial implementation
  *******************************************************************************/
-package org.eclipse.lyo.client.oslc.resources;
+package org.eclipse.lyo.client.resources;
 
 
 public interface ArchitectureConstants

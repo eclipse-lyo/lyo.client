@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2014 IBM Corporation.
+ * Copyright (c) 2012 IBM Corporation.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -11,9 +11,9 @@
  *
  * Contributors:
  *
- *     Michael Fiedler       - initial implementation
+ *     Paul McMahan         - initial API and implementation
  *******************************************************************************/
-package org.eclipse.lyo.client.oslc.resources;
+package org.eclipse.lyo.client.resources;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -23,81 +23,51 @@ import java.util.TreeSet;
 
 import org.eclipse.lyo.oslc4j.core.annotation.OslcDescription;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcName;
-import org.eclipse.lyo.oslc4j.core.annotation.OslcNamespace;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcOccurs;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcPropertyDefinition;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcRange;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcReadOnly;
-import org.eclipse.lyo.oslc4j.core.annotation.OslcResourceShape;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcTitle;
+import org.eclipse.lyo.oslc4j.core.annotation.OslcValueType;
 import org.eclipse.lyo.oslc4j.core.model.AbstractResource;
 import org.eclipse.lyo.oslc4j.core.model.Occurs;
 import org.eclipse.lyo.oslc4j.core.model.OslcConstants;
+import org.eclipse.lyo.oslc4j.core.model.ValueType;
 
-@OslcResourceShape(title = "Architecture Management LinkType Resource Shape", describes = ArchitectureConstants.TYPE_ARCHITECTURE_LINK_TYPE)
-@OslcNamespace(ArchitectureConstants.ARCHITECTURE_NAMESPACE)
-@OslcName(ArchitectureConstants.ARCHITECTURE_LINK_TYPE)
 /**
- * @see http://open-services.net/wiki/architecture-management/OSLC-Architecture-Management-Specification-Version-2.0/
+ * @see http://open-services.net/bin/view/Main/QmSpecificationV2
  */
-public final class ArchitectureLinkType
-extends AbstractResource
+public abstract class QmResource
+       extends AbstractResource
 {
-	private final Set<URI>      contributors                = new TreeSet<URI>();
-    private final Set<URI>      creators                    = new TreeSet<URI>();
     private final Set<URI>      rdfTypes                    = new TreeSet<URI>();
 
-
     private Date     created;
-    private String   comment;
-    private String   label;
     private String   identifier;
     private URI      instanceShape;
     private Date     modified;
     private URI      serviceProvider;
+    private String   title;
 
+    public QmResource()
+     {
+         super();
 
-	public ArchitectureLinkType()
-	{
-		super();
+         rdfTypes.add(getRdfType());
+     }
 
-		rdfTypes.add(URI.create(ArchitectureConstants.TYPE_ARCHITECTURE_LINK_TYPE));
-	}
-
-    public ArchitectureLinkType(final URI about)
+     public QmResource(final URI about)
      {
          super(about);
 
-		rdfTypes.add(URI.create(ArchitectureConstants.TYPE_ARCHITECTURE_LINK_TYPE));
+         rdfTypes.add(getRdfType());
      }
 
-    protected URI getRdfType() {
-    	return URI.create(ArchitectureConstants.TYPE_ARCHITECTURE_LINK_TYPE);
-    }
-
-    public void addContributor(final URI contributor)
-    {
-        this.contributors.add(contributor);
-    }
-
-    public void addCreator(final URI creator)
-    {
-        this.creators.add(creator);
-    }
+    protected abstract URI getRdfType();
 
     public void addRdfType(final URI rdfType)
     {
         this.rdfTypes.add(rdfType);
-    }
-
-    @OslcDescription("The person(s) who are responsible for the work needed to complete the automation plan.")
-    @OslcName("contributor")
-    @OslcPropertyDefinition(OslcConstants.DCTERMS_NAMESPACE + "contributor")
-    @OslcRange(QmConstants.TYPE_PERSON)
-    @OslcTitle("Contributors")
-    public URI[] getContributors()
-    {
-        return contributors.toArray(new URI[contributors.size()]);
     }
 
     @OslcDescription("Timestamp of resource creation.")
@@ -107,34 +77,6 @@ extends AbstractResource
     public Date getCreated()
     {
         return created;
-    }
-
-    @OslcDescription("Creator or creators of resource.")
-    @OslcName("creator")
-    @OslcPropertyDefinition(OslcConstants.DCTERMS_NAMESPACE + "creator")
-    @OslcRange(ArchitectureConstants.TYPE_PERSON)
-    @OslcTitle("Creators")
-    public URI[] getCreators()
-    {
-        return creators.toArray(new URI[creators.size()]);
-    }
-
-    @OslcDescription("The human readable name for this link type.")
-    @OslcPropertyDefinition(OslcConstants.RDFS_NAMESPACE + "label")
-    @OslcTitle("Label")
-    @OslcOccurs(Occurs.ExactlyOne)
-    public String getLabel()
-    {
-        return label;
-    }
-
-    @OslcDescription("Descriptive text about link type. ")
-    @OslcPropertyDefinition(OslcConstants.RDFS_NAMESPACE + "comment")
-    @OslcTitle("Comment")
-    @OslcOccurs(Occurs.ZeroOrOne)
-    public String getComment()
-    {
-        return comment;
     }
 
     @OslcDescription("A unique identifier for a resource. Assigned by the service provider when a resource is created. Not intended for end-user display.")
@@ -183,39 +125,19 @@ extends AbstractResource
         return serviceProvider;
     }
 
-    public void setContributors(final URI[] contributors)
+    @OslcDescription("Title (reference: Dublin Core) or often a single line summary of the resource represented as rich text in XHTML content.")
+    @OslcOccurs(Occurs.ExactlyOne)
+    @OslcPropertyDefinition(OslcConstants.DCTERMS_NAMESPACE + "title")
+    @OslcTitle("Title")
+    @OslcValueType(ValueType.XMLLiteral)
+    public String getTitle()
     {
-        this.contributors.clear();
-
-        if (contributors != null)
-        {
-            this.contributors.addAll(Arrays.asList(contributors));
-        }
+        return title;
     }
 
     public void setCreated(final Date created)
     {
         this.created = created;
-    }
-
-    public void setCreators(final URI[] creators)
-    {
-        this.creators.clear();
-
-        if (creators != null)
-        {
-            this.creators.addAll(Arrays.asList(creators));
-        }
-    }
-
-    public void setLabel(final String label)
-    {
-        this.label = label;
-    }
-
-    public void setComment(final String comment)
-    {
-        this.comment = comment;
     }
 
     public void setIdentifier(final String identifier)
@@ -246,6 +168,11 @@ extends AbstractResource
     public void setServiceProvider(final URI serviceProvider)
     {
         this.serviceProvider = serviceProvider;
+    }
+
+    public void setTitle(final String title)
+    {
+        this.title = title;
     }
 
 }

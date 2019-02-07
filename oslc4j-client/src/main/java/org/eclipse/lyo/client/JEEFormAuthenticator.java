@@ -1,4 +1,4 @@
-package org.eclipse.lyo.client.oslc;
+package org.eclipse.lyo.client;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +32,7 @@ import org.apache.http.ssl.SSLContextBuilder;
  * @author jamsden
  *
  */
-public class JEEFormAuthenticator  implements ClientRequestFilter, ClientResponseFilter {
+public class JEEFormAuthenticator implements ClientRequestFilter, ClientResponseFilter {
     private static final String COOKIE = "Cookie";
  
     // security params

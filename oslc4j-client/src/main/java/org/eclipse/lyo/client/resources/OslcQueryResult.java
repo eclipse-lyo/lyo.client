@@ -16,7 +16,7 @@
  *     Samuel Padgett   - support setting member property
  *     Samuel Padgett   - preserve member property on call to getNext()
  *******************************************************************************/
-package org.eclipse.lyo.client.oslc.resources;
+package org.eclipse.lyo.client.resources;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -27,7 +27,8 @@ import java.util.Iterator;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 import javax.ws.rs.core.Response;
-import org.eclipse.lyo.client.oslc.OSLCConstants;
+
+import org.eclipse.lyo.client.OSLCConstants;
 import org.eclipse.lyo.oslc4j.core.exception.OslcCoreApplicationException;
 import org.eclipse.lyo.oslc4j.core.model.OslcConstants;
 import org.eclipse.lyo.oslc4j.provider.jena.JenaModelHelper;

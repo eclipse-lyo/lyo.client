@@ -14,7 +14,7 @@
  *     Gabriel Ruelas       - initial API and implementation
  *     Carlos A Arreola     - initial API and implementation
  *******************************************************************************/
-package org.eclipse.lyo.client.oslc.resources;
+package org.eclipse.lyo.client.resources;
 
 import java.io.IOException;
 import java.net.URI;
@@ -24,9 +24,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import javax.ws.rs.core.Response;
+
+import org.eclipse.lyo.client.OSLCConstants;
+import org.eclipse.lyo.client.OslcClient;
 import org.eclipse.lyo.client.exception.ResourceNotFoundException;
-import org.eclipse.lyo.client.oslc.OSLCConstants;
-import org.eclipse.lyo.client.oslc.OslcClient;
 import org.eclipse.lyo.oslc4j.core.model.CreationFactory;
 import org.eclipse.lyo.oslc4j.core.model.ResourceShape;
 import org.eclipse.lyo.oslc4j.core.model.Service;

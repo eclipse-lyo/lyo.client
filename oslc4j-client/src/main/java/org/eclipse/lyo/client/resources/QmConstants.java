@@ -11,22 +11,20 @@
  *
  * Contributors:
  *
- *     Russell Boykin       - initial API and implementation
- *     Alberto Giammaria    - initial API and implementation
- *     Chris Peters         - initial API and implementation
- *     Gianluca Bernardini  - initial API and implementation
+ *     Paul McMahan         - initial API and implementation
  *******************************************************************************/
-package org.eclipse.lyo.client.oslc.resources;
+package org.eclipse.lyo.client.resources;
 
 import org.eclipse.lyo.oslc4j.core.model.OslcConstants;
 
-public interface CmConstants
+public interface QmConstants
 {
     public static String CHANGE_MANAGEMENT_DOMAIN                    = "http://open-services.net/ns/cm#";
     public static String CHANGE_MANAGEMENT_NAMESPACE                 = "http://open-services.net/ns/cm#";
     public static String CHANGE_MANAGEMENT_NAMESPACE_PREFIX          = "oslc_cm";
     public static String FOAF_NAMESPACE                              = "http://xmlns.com/foaf/0.1/";
     public static String FOAF_NAMESPACE_PREFIX                       = "foaf";
+    public static String QUALITY_MANAGEMENT_DOMAIN                    = "http://open-services.net/ns/qm#";
     public static String QUALITY_MANAGEMENT_NAMESPACE                = "http://open-services.net/ns/qm#";
     public static String QUALITY_MANAGEMENT_PREFIX                   = "oslc_qm";
     public static String REQUIREMENTS_MANAGEMENT_NAMESPACE           = "http://open-services.net/ns/rm#";
@@ -40,13 +38,18 @@ public interface CmConstants
     public static String TYPE_DISCUSSION            = OslcConstants.OSLC_CORE_NAMESPACE + "Discussion";
     public static String TYPE_PERSON                = FOAF_NAMESPACE + "Person";
     public static String TYPE_REQUIREMENT           = REQUIREMENTS_MANAGEMENT_NAMESPACE + "Requirement";
+	public static String TYPE_REQUIREMENT_COLLECTION = REQUIREMENTS_MANAGEMENT_NAMESPACE + "RequirementCollection";
     public static String TYPE_TEST_CASE             = QUALITY_MANAGEMENT_NAMESPACE + "TestCase";
     public static String TYPE_TEST_EXECUTION_RECORD = QUALITY_MANAGEMENT_NAMESPACE + "TestExecutionRecord";
     public static String TYPE_TEST_PLAN             = QUALITY_MANAGEMENT_NAMESPACE + "TestPlan";
     public static String TYPE_TEST_RESULT           = QUALITY_MANAGEMENT_NAMESPACE + "TestResult";
     public static String TYPE_TEST_SCRIPT           = QUALITY_MANAGEMENT_NAMESPACE + "TestScript";
 
-    public static String PATH_CHANGE_REQUEST = "changeRequest";
+    public static String PATH_TEST_PLAN = "testPlan";
+    public static String PATH_TEST_CASE = "testCase";
+    public static String PATH_TEST_SCRIPT = "testScript";
+    public static String PATH_TEST_EXECUTION_RECORD = "testExecutionRecord";
+    public static String PATH_TEST_RESULT = "testResult";
 
-    public static String USAGE_LIST = CHANGE_MANAGEMENT_NAMESPACE + "list";
+    public static String USAGE_LIST = QUALITY_MANAGEMENT_NAMESPACE + "list";
 }
