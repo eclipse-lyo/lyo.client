@@ -43,7 +43,8 @@ import org.apache.jena.rdf.model.SimpleSelector;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.RDFS;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The results of an OSLC query. If the query was paged, subsequent pages can be retrieved using the Iterator interface.
@@ -51,11 +52,14 @@ import org.apache.jena.vocabulary.RDFS;
  * This class is not currently thread safe.
  */
 public class OslcQueryResult implements Iterator<OslcQueryResult> {
+
+	private final static Logger   log = LoggerFactory.getLogger(OslcQueryResult.class);
+
 	/**
 	 * The default member property to look for in OSLC query results
 	 * (rdfs:member). Can be changed using {@link #setMemberProperty(String)}.
 	 */
-	public final static Property DEFAULT_MEMBER_PROPERTY = RDFS.member;
+	public final static  Property DEFAULT_MEMBER_PROPERTY = RDFS.member;
 
 	/**
 	 * If system property {@value} is set to true, find any member in the
@@ -139,8 +143,14 @@ public class OslcQueryResult implements Iterator<OslcQueryResult> {
 			StmtIterator iter = rdfModel.listStatements(select);
 			if (iter.hasNext()) {
 				Statement nextPage = iter.next();
-				final Resource nextPageResource = nextPage.getResource();
-				nextPageUrl = nextPageResource.getURI();
+				final RDFNode nextPageObject = nextPage.getObject();
+				if(nextPageObject != null && nextPageObject.isResource()) {
+					final Resource nextPageResource = nextPageObject.asResource();
+					nextPageUrl = nextPageResource.getURI();
+				} else {
+					log.warn("oslc:nextPage does not point to an RDF resource: {}", nextPageObject);
+					nextPageUrl = null;
+				}
 			} else {
 				nextPageUrl = "";
 			}
