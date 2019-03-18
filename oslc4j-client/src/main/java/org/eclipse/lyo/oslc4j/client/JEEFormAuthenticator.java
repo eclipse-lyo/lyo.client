@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseContext;
@@ -21,9 +20,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.ssl.SSLContextBuilder;
 
 /**
  * A filter that can be registered in order to non-preemptively handle JEE Form
@@ -90,36 +86,12 @@ public class JEEFormAuthenticator implements ClientRequestFilter, ClientResponse
         	return;
         }
         // We got an Authentication challenge, attempt to authenticate the user
-        
-		// Setup SSL support to ignore self-assigned SSL certificates, uses only for authentication
-		ClientBuilder clientBuilder = ClientBuilder.newBuilder();
-	    SSLContextBuilder sslContextBuilder = null;
-	    try {
-		    sslContextBuilder = new SSLContextBuilder();
-		    sslContextBuilder.loadTrustMaterial(TrustSelfSignedStrategy.INSTANCE);
-		    clientBuilder.sslContext(sslContextBuilder.build());
-	    } catch (Exception e) {
-	    	e.printStackTrace(System.err);
-	    }
-	    clientBuilder.hostnameVerifier(NoopHostnameVerifier.INSTANCE);
-        authClient =  clientBuilder.build();
         authClient = request.getClient();
-
-        Response authResponse = authClient
-                .target(this.baseUri)
-                .path("authenticated/identity")
-                .request()
-                .property(FORM_AUTHENTICATOR_REUSED, "true") // prevent infinite loops
-                .get();
-		int statusCode = authResponse.getStatus();
-		String location = authResponse.getHeaderString("Location");
-		authResponse.close();
-		statusCode = followRedirects(statusCode, location);
 
         final Form form = new Form();
         form.param(J_USERNAME, this.userId);
         form.param(J_PASSWORD, this.password);
-        authResponse = authClient
+        Response authResponse = authClient
         	.target(this.baseUri)
         	.path(J_SECURITY_CHECK)
             .request(MediaType.APPLICATION_FORM_URLENCODED)
@@ -130,7 +102,7 @@ public class JEEFormAuthenticator implements ClientRequestFilter, ClientResponse
         authResponse.getCookies().values().stream().forEach((cookie) -> {
             cookies.add(cookie.toCookie());
         });
-		statusCode = authResponse.getStatus();
+		int statusCode = authResponse.getStatus();
 		// Check the result
 		String jazzAuthMessage = authResponse.getHeaderString(JAZZ_AUTH_MESSAGE_HEADER);
 		
@@ -140,7 +112,7 @@ public class JEEFormAuthenticator implements ClientRequestFilter, ClientResponse
         	return;
 		}
 		
-		location = authResponse.getHeaderString("Location");
+		String location = authResponse.getHeaderString("Location");
 		authResponse.close();
 		statusCode = followRedirects(statusCode, location);
  
