@@ -374,8 +374,8 @@ public class OslcClient {
 		String retval = null;
 		Response response = getResource(catalogUrl,OSLCConstants.CT_RDF);
 		if (response.getStatus() != HttpStatus.SC_OK) {
-			logger.error("Cannot read "+catalogUrl+" status: "+response.getStatus());
-			return null;
+			logger.error("Cannot read {} status: {}", catalogUrl, response.getStatus());
+			return retval;
 		}
 		ServiceProviderCatalog catalog = response.readEntity(ServiceProviderCatalog.class);
 
@@ -591,7 +591,7 @@ public class OslcClient {
 		try {
 			Response response = this.getResource(rootServicesUrl,OSLCConstants.CT_RDF);
 			if (response.getStatus() != HttpStatus.SC_OK) {
-				logger.error("Cannot read "+rootServicesUrl+" status: "+response.getStatus());
+				logger.error("Cannot read {} status: {}", rootServicesUrl, response.getStatus());
 				return null;
 			}
 			InputStream is = response.readEntity(InputStream.class);
