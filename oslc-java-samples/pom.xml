@@ -11,7 +11,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <wink.version>1.4</wink.version>
-        <lyo.version>2.3.0</lyo.version>
+        <lyo.version>2.4.0</lyo.version>
     </properties>
 
     <dependencies>
