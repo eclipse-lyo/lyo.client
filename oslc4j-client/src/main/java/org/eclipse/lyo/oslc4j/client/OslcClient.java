@@ -66,8 +66,6 @@ import org.slf4j.LoggerFactory;
 public class OslcClient {
 
 	private Client client;
-
-	protected HttpClient httpClient;
 	private String baseUrl;
 	private String rootServicesUrl;
 	private String catalogDomain;
@@ -117,8 +115,6 @@ public class OslcClient {
 		}
 
 		this.client = clientBuilder.build();
-
-		this.httpClient = HttpClientBuilder.create().build();
 	}
 
 	/**
@@ -128,15 +124,6 @@ public class OslcClient {
 	public Client getClient() {
 		return client;
 	}
-
-	/**
-	 * Returns the HTTP client associated with this OSLC Client
-	 * @return the HTTP client
-	 */
-	public HttpClient getHttpClient() {
-		return httpClient;
-	}
-
 
 	/**
 	 * Gets an OSLC resource using <code>application/rdf+xml</code>. Use
