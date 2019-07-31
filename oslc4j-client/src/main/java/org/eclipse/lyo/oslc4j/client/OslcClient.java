@@ -44,7 +44,6 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.tdb.setup.Build;
 import org.eclipse.lyo.oslc4j.client.exception.ResourceNotFoundException;
 import org.eclipse.lyo.oslc4j.client.exception.RootServicesException;
 import org.eclipse.lyo.oslc4j.core.model.CreationFactory;
