@@ -173,7 +173,7 @@ public class OslcQueryParameters {
 	 * @param configurationContext
 	 */
 	public void setConfigurationContext(String configurationContext) {
-		this.prefix = encodeQueryParams(configurationContext);
+		this.configurationContext = encodeQueryParams(configurationContext);
 	}
 
 	private String encodeQueryParams(String oslcQueryParam) {
