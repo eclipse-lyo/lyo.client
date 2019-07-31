@@ -227,7 +227,7 @@ public class OslcClient {
 			}
 
 			if(configurationContext != null) {
-				innvocationBuilder.header("Configuration-Context", configurationContext);
+				innvocationBuilder.header(CONFIGURATION_CONTEXT_HEADER, configurationContext);
 			}
 
 			response = innvocationBuilder.get();
@@ -264,7 +264,7 @@ public class OslcClient {
 					.header(OSLCConstants.OSLC_CORE_VERSION, version);
 
 			if(configurationContext != null) {
-				invocationBuilder.header("Configuration-Context", configurationContext);
+				invocationBuilder.header(CONFIGURATION_CONTEXT_HEADER, configurationContext);
 			}
 
 			response = invocationBuilder.delete();
@@ -311,7 +311,7 @@ public class OslcClient {
 					.header(OSLCConstants.OSLC_CORE_VERSION, version);
 
 			if(configurationContext != null) {
-				invocationBuilder.header("Configuration-Context", configurationContext);
+				invocationBuilder.header(CONFIGURATION_CONTEXT_HEADER, configurationContext);
 			}
 
 			response = invocationBuilder
