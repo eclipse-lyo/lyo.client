@@ -59,12 +59,7 @@ public final class RmUtil {
 									URI[] instanceShapes = creationFactory.getResourceShapes();
 									if (instanceShapes != null ){
 										for ( URI typeURI : instanceShapes) {
-											if(configurationContext != null) {
-												response = client.getResource(typeURI.toString(), null, OSLCConstants.CT_RDF, configurationContext);
-											}
-											else{
-												response = client.getResource(typeURI.toString(), OSLCConstants.CT_RDF);
-											}
+											response = client.getResource(typeURI.toString(), null, OSLCConstants.CT_RDF, configurationContext);
 											ResourceShape resourceShape =  response.readEntity(ResourceShape.class);
 											String typeTitle = resourceShape.getTitle();
 											if ( ( typeTitle != null) && (typeTitle.equalsIgnoreCase(requiredInstanceShape)) ) {

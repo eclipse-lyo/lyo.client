@@ -63,7 +63,6 @@ import org.slf4j.LoggerFactory;
  */
 public class OslcClient {
 
-	public static final String CONFIGURATION_CONTEXT_HEADER = "Configuration-Context";
 	private final String version;
 	private Client client;
 	private String baseUrl;
@@ -227,7 +226,7 @@ public class OslcClient {
 			}
 
 			if(configurationContext != null) {
-				innvocationBuilder.header(CONFIGURATION_CONTEXT_HEADER, configurationContext);
+				innvocationBuilder.header(OSLCConstants.CONFIGURATION_CONTEXT_HEADER, configurationContext);
 			}
 
 			response = innvocationBuilder.get();
@@ -264,7 +263,7 @@ public class OslcClient {
 					.header(OSLCConstants.OSLC_CORE_VERSION, version);
 
 			if(configurationContext != null) {
-				invocationBuilder.header(CONFIGURATION_CONTEXT_HEADER, configurationContext);
+				invocationBuilder.header(OSLCConstants.CONFIGURATION_CONTEXT_HEADER, configurationContext);
 			}
 
 			response = invocationBuilder.delete();
@@ -311,7 +310,7 @@ public class OslcClient {
 					.header(OSLCConstants.OSLC_CORE_VERSION, version);
 
 			if(configurationContext != null) {
-				invocationBuilder.header(CONFIGURATION_CONTEXT_HEADER, configurationContext);
+				invocationBuilder.header(OSLCConstants.CONFIGURATION_CONTEXT_HEADER, configurationContext);
 			}
 
 			response = invocationBuilder
@@ -368,7 +367,7 @@ public class OslcClient {
 				invocationBuilder.header(HttpHeaders.IF_MATCH, ifMatch);
 			}
 			if(configurationContext != null) {
-				invocationBuilder.header(CONFIGURATION_CONTEXT_HEADER, configurationContext);
+				invocationBuilder.header(OSLCConstants.CONFIGURATION_CONTEXT_HEADER, configurationContext);
 			}
 
 			response = invocationBuilder
