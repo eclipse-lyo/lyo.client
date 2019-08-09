@@ -613,8 +613,10 @@ public class OslcClient {
 
 		}
 		else if (this.catalogDomain.equalsIgnoreCase(OSLCConstants.OSLC_CONFIG)) {
+
 			this.catalogNamespace = OSLCConstants.OSLC_CONFIG;
 			this.catalogProperty =  RootServicesConstants.CM_ROOTSERVICES_CATALOG_PROP;
+
 		}
 		else {
 			logger.error("Jazz rootservices only supports CM, RM, QM, GC and Automation catalogs");
