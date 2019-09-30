@@ -56,6 +56,8 @@ import org.eclipse.lyo.oslc4j.provider.json4j.Json4JProvidersRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.oauth.OAuthException;
+
 /**
  * An OSLC Client that extends the JAX-RS 2.0 REST client with OSLC specific CRUD and
  * discovery capabilities. Client applications would typically provide a ClientBuilder
@@ -64,25 +66,7 @@ import org.slf4j.LoggerFactory;
 public class OslcClient {
 
 	private final String version;
-	private Client client;
-	private String baseUrl;
-	private String rootServicesUrl;
-	private String catalogDomain;
-	private String catalogNamespace;
-	private String catalogProperty;
-	private String catalogUrl;
-	private Model rdfModel;
-
-	//OAuth URLs
-	String authorizationRealm;
-	String requestTokenUrl;
-	String authorizationTokenUrl;
-	String accessTokenUrl;
-	String requestConsumerKeyUrl;
-	String consumerApprovalUrl;
-
-	public static final String JFS_NAMESPACE = "http://jazz.net/xmlns/prod/jazz/jfs/1.0/";
-	public static final String JD_NAMESPACE = "http://jazz.net/xmlns/prod/jazz/discovery/1.0/";
+	protected Client client;
 
 	private final static Logger logger = LoggerFactory.getLogger(OslcClient.class);
 
@@ -146,8 +130,8 @@ public class OslcClient {
 	 * {@link #getResource(String, Map)} to add other request headers.
 	 */
 	@SuppressWarnings("unused")
-	public Response getResource(String url) {
-		return getResource(url, null, OSLCConstants.CT_RDF);
+	public Response getResource(String url) throws IOException, OAuthException, URISyntaxException {
+		return getResource(url, null, OSLCConstants.CT_RDF, null, true);
 	}
 
 	/**
@@ -161,8 +145,8 @@ public class OslcClient {
 	 *            header
 	 */
 	@SuppressWarnings("unused")
-	public Response getResource(String url, final String mediaType) {
-		return getResource(url, null, mediaType);
+	public Response getResource(String url, final String mediaType) throws IOException, OAuthException, URISyntaxException {
+		return getResource(url, null, mediaType, null, true);
 	}
 
 	/**
@@ -177,16 +161,24 @@ public class OslcClient {
 	 *            <code>OSLC-Core-Version</code> is not in the map, it defaults
 	 *            to <code>2.0</code>.
 	 */
-	public Response getResource(String url, Map<String, String> requestHeaders) {
-		return getResource(url, requestHeaders, OSLCConstants.CT_RDF);
+	public Response getResource(String url, Map<String, String> requestHeaders) throws IOException, OAuthException, URISyntaxException {
+		return getResource(url, requestHeaders, OSLCConstants.CT_RDF, null, true);
 	}
 
-	public Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType) {
-		return getResource(url, requestHeaders, defaultMediaType, null);
+	public Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType, boolean handleRedirects) throws IOException, OAuthException, URISyntaxException {
+		return getResource(url, requestHeaders, defaultMediaType, null, handleRedirects);
 	}
+
+   public Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType) throws IOException, OAuthException, URISyntaxException {
+        return getResource(url, requestHeaders, defaultMediaType, null, true);
+    }
+
+   public Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType, String configurationContext) throws IOException, OAuthException, URISyntaxException {
+       return getResource(url, requestHeaders, defaultMediaType, configurationContext, true);
+   }
 
 	public Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType,
-									String configurationContext) {
+									String configurationContext, boolean handleRedirects) throws IOException, OAuthException, URISyntaxException {
 		Response response = null;
 		boolean redirect = false;
 		do {
@@ -231,7 +223,7 @@ public class OslcClient {
 
 			response = innvocationBuilder.get();
 
-			if (Response.Status.fromStatusCode(response.getStatus()).getFamily() == Status.Family.REDIRECTION) {
+			if (handleRedirects && Response.Status.fromStatusCode(response.getStatus()).getFamily() == Status.Family.REDIRECTION) {
 				url = response.getStringHeaders().getFirst(HttpHeaders.LOCATION);
 				response.readEntity(String.class);
 				redirect = true;
@@ -395,9 +387,10 @@ public class OslcClient {
 
 	/**
 	 * Lookup the URL of a specific OSLC Service Provider in an OSLC Catalog using the service provider's title
+	 * @throws OAuthException 
 	 */
 	public String lookupServiceProviderUrl(final String catalogUrl, final String serviceProviderTitle)
-			throws IOException, URISyntaxException, ResourceNotFoundException
+			throws IOException, URISyntaxException, ResourceNotFoundException, OAuthException
 	{
 		String retval = null;
 		Response response = getResource(catalogUrl,OSLCConstants.CT_RDF);
@@ -430,9 +423,10 @@ public class OslcClient {
 	 *
 	 * @param oslcResourceType - the resource type of the desired query capability.   This may differ from the OSLC artifact type.
 	 * @return URL of requested Query Capability or null if not found.
+	 * @throws OAuthException 
 	 */
 	public String lookupQueryCapability(final String serviceProviderUrl, final String oslcDomain, final String oslcResourceType)
-			throws IOException, URISyntaxException, ResourceNotFoundException
+			throws IOException, URISyntaxException, ResourceNotFoundException, OAuthException
 	{
 		QueryCapability defaultQueryCapability = null;
 		QueryCapability firstQueryCapability = null;
@@ -481,13 +475,13 @@ public class OslcClient {
 	}
 
 	public CreationFactory lookupCreationFactoryResource(final String serviceProviderUrl, final String oslcDomain, final String oslcResourceType)
-			throws IOException, URISyntaxException, ResourceNotFoundException
+			throws IOException, URISyntaxException, ResourceNotFoundException, OAuthException
 	{
 		return lookupCreationFactoryResource(serviceProviderUrl, oslcDomain, oslcResourceType, null);
 	}
 
 	public CreationFactory lookupCreationFactoryResource(final String serviceProviderUrl, final String oslcDomain, final String oslcResourceType, final String oslcUsage)
-			throws IOException, URISyntaxException, ResourceNotFoundException
+			throws IOException, URISyntaxException, ResourceNotFoundException, OAuthException
 	{
 		CreationFactory defaultCreationFactory = null;
 		CreationFactory firstCreationFactory = null;
@@ -549,9 +543,10 @@ public class OslcClient {
 	 *
 	 * @param oslcResourceType - the resource type of the desired query capability.   This may differ from the OSLC artifact type.
 	 * @return URL of requested Creation Factory or null if not found.
+	 * @throws OAuthException 
 	 */
 	public String lookupCreationFactory(final String serviceProviderUrl, final String oslcDomain, final String oslcResourceType)
-			throws IOException, URISyntaxException, ResourceNotFoundException
+			throws IOException, URISyntaxException, ResourceNotFoundException, OAuthException
 	{
 		return lookupCreationFactory(serviceProviderUrl, oslcDomain, oslcResourceType, null);
 	}
@@ -562,119 +557,12 @@ public class OslcClient {
 	 *
 	 * @param oslcResourceType - the resource type of the desired query capability.   This may differ from the OSLC artifact type.
 	 * @return URL of requested Creation Factory or null if not found.
+	 * @throws OAuthException 
 	 */
 	public String lookupCreationFactory(final String serviceProviderUrl, final String oslcDomain, final String oslcResourceType, final String oslcUsage)
-			throws IOException, URISyntaxException, ResourceNotFoundException
+			throws IOException, URISyntaxException, ResourceNotFoundException, OAuthException
 	{
 		return lookupCreationFactoryResource(serviceProviderUrl, oslcDomain, oslcResourceType, oslcUsage).getCreation().toString();
-	}
-
-	/**
-	 * Get the OSLC Catalog URL
-	 *
-	 * @return the catalog URL
-	 */
-	public String getCatalogUrl(String webContextUrl, String catalogDomain) throws RootServicesException
-	{
-		this.baseUrl = webContextUrl;
-		this.rootServicesUrl = UriBuilder.fromUri(this.baseUrl).path("rootservices").build().toString();
-		logger.debug(String.format("Fetching rootservices document at URL <%s>", this.rootServicesUrl));
-		this.catalogDomain = catalogDomain;
-		logger.debug(String.format("Using catalog domain <%s>", this.catalogDomain));
-
-		if (this.catalogDomain.equalsIgnoreCase(OSLCConstants.OSLC_CM) ||
-		    this.catalogDomain.equalsIgnoreCase(OSLCConstants.OSLC_CM_V2)) {
-
-			this.catalogNamespace = OSLCConstants.OSLC_CM;
-			this.catalogProperty  = RootServicesConstants.CM_ROOTSERVICES_CATALOG_PROP;
-
-		} else if (this.catalogDomain.equalsIgnoreCase(OSLCConstants.OSLC_QM) ||
-			       this.catalogDomain.equalsIgnoreCase(OSLCConstants.OSLC_QM_V2)) {
-
-			this.catalogNamespace = OSLCConstants.OSLC_QM;
-			this.catalogProperty =  RootServicesConstants.QM_ROOTSERVICES_CATALOG_PROP;
-
-		} else if (this.catalogDomain.equalsIgnoreCase(OSLCConstants.OSLC_RM) ||
-			       this.catalogDomain.equalsIgnoreCase(OSLCConstants.OSLC_RM_V2)) {
-
-			this.catalogNamespace = OSLCConstants.OSLC_RM;
-			this.catalogProperty =  RootServicesConstants.RM_ROOTSERVICES_CATALOG_PROP;
-
-		} else if (this.catalogDomain.equalsIgnoreCase(OSLCConstants.OSLC_AM_V2)) {
-
-			this.catalogNamespace = OSLCConstants.OSLC_AM_V2;
-			this.catalogProperty =  RootServicesConstants.AM_ROOTSERVICES_CATALOG_PROP;
-
-		}
-		else if (this.catalogDomain.equalsIgnoreCase(OSLCConstants.OSLC_AUTO)) {
-
-			this.catalogNamespace = OSLCConstants.OSLC_AUTO;
-			this.catalogProperty =  RootServicesConstants.AUTO_ROOTSERVICES_CATALOG_PROP;
-
-		}
-		else if (this.catalogDomain.equalsIgnoreCase(OSLCConstants.OSLC_CONFIG)) {
-
-			this.catalogNamespace = OSLCConstants.OSLC_CONFIG;
-			this.catalogProperty =  RootServicesConstants.CM_ROOTSERVICES_CATALOG_PROP;
-
-		}
-		else {
-			logger.error("Jazz rootservices only supports CM, RM, QM, GC and Automation catalogs");
-		}
-
-		try {
-			Response response = this.getResource(rootServicesUrl,OSLCConstants.CT_RDF);
-			if (response.getStatus() != HttpStatus.SC_OK) {
-				logger.warn("Cannot read {} status: {}", rootServicesUrl, response.getStatus());
-				return null;
-			}
-			InputStream is = response.readEntity(InputStream.class);
-			rdfModel = ModelFactory.createDefaultModel();
-			rdfModel.read(is,rootServicesUrl);
-
-			//get the catalog URL
-			this.catalogUrl = getRootServicesProperty(rdfModel, this.catalogNamespace, this.catalogProperty);
-
-			//get the OAuth URLs
-			this.requestTokenUrl = getRootServicesProperty(rdfModel, JFS_NAMESPACE, RootServicesConstants.OAUTH_REQUEST_TOKEN_URL);
-			this.authorizationTokenUrl = getRootServicesProperty(rdfModel, JFS_NAMESPACE, RootServicesConstants.OAUTH_USER_AUTH_URL);
-			this.accessTokenUrl = getRootServicesProperty(rdfModel, JFS_NAMESPACE, RootServicesConstants.OAUTH_ACCESS_TOKEN_URL);
-			try { // Following field is optional, try to get it, if not found ignore exception because it will use the default
-				this.authorizationRealm = getRootServicesProperty(rdfModel, JFS_NAMESPACE, RootServicesConstants.OAUTH_REALM_NAME);
-			} catch (ResourceNotFoundException e) {
-				logger.debug(String.format("OAuth authorization realm not found in rootservices <%s>", rootServicesUrl));
-			}
-
-			try {
-				this.requestConsumerKeyUrl = getRootServicesProperty(rdfModel, JFS_NAMESPACE, RootServicesConstants.OAUTH_REQUEST_CONSUMER_KEY_URL);
-			} catch (ResourceNotFoundException e) {
-				logger.debug(String.format("OAuth request consumer key URL not found in rootservices <%s>", rootServicesUrl));
-			}
-
-			try {
-				this.consumerApprovalUrl = getRootServicesProperty(rdfModel, JFS_NAMESPACE, RootServicesConstants.OAUTH_APPROVAL_MODULE_URL);
-			} catch (ResourceNotFoundException e) {
-				logger.debug(String.format("OAuth approval module URL not found in rootservices <%s>", rootServicesUrl));
-			}
-		} catch (Exception e) {
-			throw new RootServicesException(this.baseUrl, e);
-		}
-
-		return this.catalogUrl;
-	}
-
-	private String getRootServicesProperty(Model rdfModel, String namespace, String predicate) throws ResourceNotFoundException {
-		String returnVal = null;
-
-		Property prop = rdfModel.createProperty(namespace, predicate);
-		Statement stmt = rdfModel.getProperty((Resource) null, prop);
-		if (stmt != null && stmt.getObject() != null)
-			returnVal = stmt.getObject().toString();
-		if (returnVal == null)
-		{
-			throw new ResourceNotFoundException(baseUrl, namespace + predicate);
-		}
-		return returnVal;
 	}
 
 
