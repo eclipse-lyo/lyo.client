@@ -84,7 +84,7 @@ public class RootServicesHelper {
 	 * @param catalogDomain - Namespace of the OSLC domain to find the catalog for.  Example:  OSLCConstants.OSLC_CM
 	 * @throws RootServicesException
 	 */
-	public RootServicesHelper (String url, String catalogDomain, ClientBuilder clientBuilder) throws RootServicesException {
+	public RootServicesHelper (String url, String catalogDomain, OslcClient client) throws RootServicesException {
 		this.baseUrl = url;
 		this.rootServicesUrl = UriBuilder.fromUri(this.baseUrl).path("rootservices").build().toString();
 		logger.debug(String.format("Fetching rootservices document at URL <%s>", this.rootServicesUrl));
@@ -125,7 +125,6 @@ public class RootServicesHelper {
 			logger.error("Jazz rootservices only supports CM, RM, QM, and Automation catalogs");
 		}
 
-		OslcClient client = new OslcClient(clientBuilder);
 		processRootServices(client);
 	}
 
@@ -137,25 +136,6 @@ public class RootServicesHelper {
 	public String getCatalogUrl()
 	{
 		return catalogUrl;
-	}
-
-	/**
-     * Initialize an OAuthClient based on information from the root document
-	 * @param consumerKey
-	 * @param secret
-	 * @param clientBuilder
-	 * @return
-	 */
-	public OslcOAuthClient initOAuthClient(String consumerKey, String secret, ClientBuilder clientBuilder) {
-		return new OslcOAuthClient (
-								requestTokenUrl,
-								authorizationTokenUrl,
-								accessTokenUrl,
-								consumerKey,
-								secret,
-								authorizationRealm,
-								"",
-								clientBuilder);
 	}
 
 	private void processRootServices(OslcClient rootServicesClient) throws RootServicesException
@@ -221,6 +201,22 @@ public class RootServicesHelper {
 	public Model getRdfModel() {
 		return rdfModel;
 	}
+
+	public String getAuthorizationRealm() {
+	    return authorizationRealm;
+    }
+
+    public String getRequestTokenUrl() {
+        return requestTokenUrl;
+    }
+
+    public String getAuthorizationTokenUrl() {
+        return authorizationTokenUrl;
+    }
+
+    public String getAccessTokenUrl() {
+        return accessTokenUrl;
+    }
 
 	/**
 	 * Gets the URL for requesting an OAuth consumer key.

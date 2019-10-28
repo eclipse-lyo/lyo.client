@@ -23,11 +23,9 @@
 package org.eclipse.lyo.oslc4j.client;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -35,17 +33,9 @@ import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
-
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.Statement;
 import org.eclipse.lyo.oslc4j.client.exception.ResourceNotFoundException;
-import org.eclipse.lyo.oslc4j.client.exception.RootServicesException;
 import org.eclipse.lyo.oslc4j.core.model.CreationFactory;
 import org.eclipse.lyo.oslc4j.core.model.QueryCapability;
 import org.eclipse.lyo.oslc4j.core.model.Service;
@@ -56,17 +46,15 @@ import org.eclipse.lyo.oslc4j.provider.json4j.Json4JProvidersRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.oauth.OAuthException;
-
 /**
  * An OSLC Client that extends the JAX-RS 2.0 REST client with OSLC specific CRUD and
  * discovery capabilities. Client applications would typically provide a ClientBuilder
  * to the constructor to configure the REST client too meet their needs.
  */
-public class OslcClient {
+public class OslcClient implements IOslcClient {
 
 	private final String version;
-	protected Client client;
+	private Client client;
 
 	private final static Logger logger = LoggerFactory.getLogger(OslcClient.class);
 
@@ -119,7 +107,6 @@ public class OslcClient {
 	 * Returns the JAX-RS client for this OslcClient. Do not touch unless needed.
 	 * @return the JAX-RS client
 	 */
-	@Deprecated
 	public Client getClient() {
 		return client;
 	}
@@ -130,7 +117,7 @@ public class OslcClient {
 	 * {@link #getResource(String, Map)} to add other request headers.
 	 */
 	@SuppressWarnings("unused")
-	public Response getResource(String url) throws IOException, OAuthException, URISyntaxException {
+	public Response getResource(String url) {
 		return getResource(url, null, OSLCConstants.CT_RDF, null, true);
 	}
 
@@ -145,7 +132,7 @@ public class OslcClient {
 	 *            header
 	 */
 	@SuppressWarnings("unused")
-	public Response getResource(String url, final String mediaType) throws IOException, OAuthException, URISyntaxException {
+	public Response getResource(String url, final String mediaType) {
 		return getResource(url, null, mediaType, null, true);
 	}
 
@@ -161,24 +148,25 @@ public class OslcClient {
 	 *            <code>OSLC-Core-Version</code> is not in the map, it defaults
 	 *            to <code>2.0</code>.
 	 */
-	public Response getResource(String url, Map<String, String> requestHeaders) throws IOException, OAuthException, URISyntaxException {
+	public Response getResource(String url, Map<String, String> requestHeaders) {
 		return getResource(url, requestHeaders, OSLCConstants.CT_RDF, null, true);
 	}
 
-	public Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType, boolean handleRedirects) throws IOException, OAuthException, URISyntaxException {
-		return getResource(url, requestHeaders, defaultMediaType, null, handleRedirects);
+	public Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType) {
+	    return getResource(url, requestHeaders, defaultMediaType, null, true);
 	}
 
-   public Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType) throws IOException, OAuthException, URISyntaxException {
-        return getResource(url, requestHeaders, defaultMediaType, null, true);
-    }
-
-   public Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType, String configurationContext) throws IOException, OAuthException, URISyntaxException {
+    public Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType, 
+            String configurationContext) {
        return getResource(url, requestHeaders, defaultMediaType, configurationContext, true);
    }
 
-	public Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType,
-									String configurationContext, boolean handleRedirects) throws IOException, OAuthException, URISyntaxException {
+   public Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType, boolean handleRedirects) {
+       return getResource(url, requestHeaders, defaultMediaType, null, handleRedirects);
+   }
+   
+   public Response getResource (String url, Map<String, String> requestHeaders, String defaultMediaType,
+									String configurationContext, boolean handleRedirects) {
 		Response response = null;
 		boolean redirect = false;
 		do {
@@ -387,10 +375,9 @@ public class OslcClient {
 
 	/**
 	 * Lookup the URL of a specific OSLC Service Provider in an OSLC Catalog using the service provider's title
-	 * @throws OAuthException 
 	 */
 	public String lookupServiceProviderUrl(final String catalogUrl, final String serviceProviderTitle)
-			throws IOException, URISyntaxException, ResourceNotFoundException, OAuthException
+			throws IOException, URISyntaxException, ResourceNotFoundException
 	{
 		String retval = null;
 		Response response = getResource(catalogUrl,OSLCConstants.CT_RDF);
@@ -423,10 +410,9 @@ public class OslcClient {
 	 *
 	 * @param oslcResourceType - the resource type of the desired query capability.   This may differ from the OSLC artifact type.
 	 * @return URL of requested Query Capability or null if not found.
-	 * @throws OAuthException 
 	 */
 	public String lookupQueryCapability(final String serviceProviderUrl, final String oslcDomain, final String oslcResourceType)
-			throws IOException, URISyntaxException, ResourceNotFoundException, OAuthException
+			throws IOException, URISyntaxException, ResourceNotFoundException
 	{
 		QueryCapability defaultQueryCapability = null;
 		QueryCapability firstQueryCapability = null;
@@ -475,13 +461,13 @@ public class OslcClient {
 	}
 
 	public CreationFactory lookupCreationFactoryResource(final String serviceProviderUrl, final String oslcDomain, final String oslcResourceType)
-			throws IOException, URISyntaxException, ResourceNotFoundException, OAuthException
+			throws IOException, URISyntaxException, ResourceNotFoundException
 	{
 		return lookupCreationFactoryResource(serviceProviderUrl, oslcDomain, oslcResourceType, null);
 	}
 
 	public CreationFactory lookupCreationFactoryResource(final String serviceProviderUrl, final String oslcDomain, final String oslcResourceType, final String oslcUsage)
-			throws IOException, URISyntaxException, ResourceNotFoundException, OAuthException
+			throws IOException, URISyntaxException, ResourceNotFoundException
 	{
 		CreationFactory defaultCreationFactory = null;
 		CreationFactory firstCreationFactory = null;
@@ -543,10 +529,9 @@ public class OslcClient {
 	 *
 	 * @param oslcResourceType - the resource type of the desired query capability.   This may differ from the OSLC artifact type.
 	 * @return URL of requested Creation Factory or null if not found.
-	 * @throws OAuthException 
 	 */
 	public String lookupCreationFactory(final String serviceProviderUrl, final String oslcDomain, final String oslcResourceType)
-			throws IOException, URISyntaxException, ResourceNotFoundException, OAuthException
+			throws IOException, URISyntaxException, ResourceNotFoundException
 	{
 		return lookupCreationFactory(serviceProviderUrl, oslcDomain, oslcResourceType, null);
 	}
@@ -557,10 +542,9 @@ public class OslcClient {
 	 *
 	 * @param oslcResourceType - the resource type of the desired query capability.   This may differ from the OSLC artifact type.
 	 * @return URL of requested Creation Factory or null if not found.
-	 * @throws OAuthException 
 	 */
 	public String lookupCreationFactory(final String serviceProviderUrl, final String oslcDomain, final String oslcResourceType, final String oslcUsage)
-			throws IOException, URISyntaxException, ResourceNotFoundException, OAuthException
+			throws IOException, URISyntaxException, ResourceNotFoundException
 	{
 		return lookupCreationFactoryResource(serviceProviderUrl, oslcDomain, oslcResourceType, oslcUsage).getCreation().toString();
 	}
