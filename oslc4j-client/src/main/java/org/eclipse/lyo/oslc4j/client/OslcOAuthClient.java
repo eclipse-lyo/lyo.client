@@ -36,8 +36,6 @@ import net.oauth.OAuthException;
 import net.oauth.OAuthMessage;
 import net.oauth.client.OAuthClient;
 import net.oauth.client.httpclient4.HttpClient4;
-import net.oauth.client.httpclient4.HttpClientPool;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
@@ -97,7 +95,7 @@ public class OslcOAuthClient implements IOslcClient {
 
     private String getAuthorizationHeader(String url, String httpMethod) throws IOException, OAuthException, URISyntaxException {
         if (!performedOAuthNegotiation()) {
-            throw new IllegalArgumentException("You need to obtain an AccessToken by first calling performOAuthNegotiation()");
+            throw new IllegalStateException("You need to obtain an AccessToken by first calling performOAuthNegotiation()");
         }
         return oauthAccessor.newRequestMessage(httpMethod, url, null).getAuthorizationHeader(oauthRealmName);
     }
@@ -209,7 +207,7 @@ public class OslcOAuthClient implements IOslcClient {
         try {
             headers = appendAuthorizationHeader(url, HttpMethod.GET, requestHeaders);
         } catch (IOException | OAuthException | URISyntaxException e) {
-            throw new IllegalArgumentException(e);
+            throw new IllegalStateException(e);
         }
         return oslcClient.getResource(url, headers, mediaType,configurationContext, handleRedirects);
     }
