@@ -45,6 +45,12 @@
             <groupId>net.oauth.core</groupId>
             <artifactId>oauth-httpclient4</artifactId>
             <version>20090913</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.eclipse.lyo.oslc4j.core</groupId>
