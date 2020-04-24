@@ -2,7 +2,6 @@ package org.eclipse.lyo.client;
 
 import javax.ws.rs.client.ClientBuilder;
 
-import org.eclipse.lyo.client.jazz.RootServicesHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

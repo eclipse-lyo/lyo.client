@@ -24,6 +24,7 @@ import javax.xml.namespace.QName;
 
 import javax.ws.rs.ClientErrorException;
 
+import org.eclipse.lyo.client.oslc.resources.AutomationRequest;
 import org.junit.Ignore;
 import org.junit.Test;
 import static org.assertj.core.api.Assertions.*;

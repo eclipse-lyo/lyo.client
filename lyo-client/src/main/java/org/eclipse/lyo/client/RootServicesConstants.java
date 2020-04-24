@@ -14,7 +14,7 @@
  *    Michael Fiedler - initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.lyo.client.jazz;
+package org.eclipse.lyo.client;
 
 /**
  * Constants for Jazz rootservices entries
