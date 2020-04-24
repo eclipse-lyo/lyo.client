@@ -5,4 +5,4 @@ jdk:
   - openjdk11
 
 script:
-  - (cd lyo-client && mvn clean verify -B)
+  - (cd lyo-client-v4 && mvn clean verify -B)
