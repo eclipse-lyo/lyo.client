@@ -120,6 +120,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.0.1</version>
                 <configuration>
+                    <source>8</source> 
                     <additionalOptions>-Xdoclint:none</additionalOptions>
                 </configuration>
                 <executions>
