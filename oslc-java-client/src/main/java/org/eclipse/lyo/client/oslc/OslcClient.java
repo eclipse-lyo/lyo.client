@@ -179,8 +179,7 @@ public class OslcClient {
 	 * @throws OAuthException
 	 * @throws URISyntaxException
 	 */
-	public ClientResponse getResource(String url) throws IOException,
-			OAuthException, URISyntaxException {
+	public ClientResponse getResource(String url) {
 		return getResource(url, null, OSLCConstants.CT_RDF);
 	}
 
@@ -291,8 +290,7 @@ public class OslcClient {
 	 * @throws OAuthException
 	 * @throws URISyntaxException
 	 */
-	public ClientResponse deleteResource(String url)
-			throws IOException, OAuthException, URISyntaxException {
+	public ClientResponse deleteResource(String url) {
 
 		ClientResponse response = null;
 		RestClient restClient = new RestClient(clientConfig);

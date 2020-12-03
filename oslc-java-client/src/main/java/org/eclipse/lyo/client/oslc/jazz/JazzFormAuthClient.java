@@ -222,8 +222,7 @@ public class JazzFormAuthClient extends OslcClient {
 	 * @throws JazzAuthErrorException
 
 	 */
-	private Boolean handleJsaServer() throws ClientProtocolException, IOException, JazzAuthErrorException
-	{
+	private Boolean handleJsaServer() {
 		if (null == lastRedirectResponse) {
 			return false;
 		}
